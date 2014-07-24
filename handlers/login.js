@@ -32,8 +32,9 @@ exports.login = function (req, res, next) {
       });
     }
 
-    bcp.compare(password, user.password, function (err, result) {
+    bcp.compare(password, user.login.password, function (err, result) {
       if(err) {
+        console.error(err);
         return res.status(500).json({
           status: 'error',
           error: 'Error processing password'

@@ -1,5 +1,6 @@
-var User = require('../models/user'),
-    winston = require('winston'),
+var User      = require('../models/user'),
+    winston   = require('winston'),
+    bcp       = require('bcrypt'),
     normalize = require('../config/data-normalization');
 
 exports.fetchAll = function (req, res, next) {
@@ -51,9 +52,7 @@ exports.create = function (req, res, next) {
 
   user_data.active = true;
 
-  var user = new User(user_data);
-
-  user.save(function (err, record) {
+  bcp.hash(user_data.login.password, 8, function(err, hash) {
     if(err) {
       return res.status(500).json({
         status: 'error',
@@ -61,8 +60,21 @@ exports.create = function (req, res, next) {
       });
     }
 
-    res.status(200).json({
-      user: record
+    user_data.login.password = hash;
+
+    var user = new User(user_data);
+
+    user.save(function (err, record) {
+      if(err) {
+        return res.status(500).json({
+          status: 'error',
+          error: err
+        });
+      }
+
+      res.status(200).json({
+        user: record
+      });
     });
   });
 }

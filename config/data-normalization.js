@@ -7,5 +7,7 @@ exports.user = function (user) {
     delete user.login.password;
   }
   
-  return user;
+  return {
+    user: user
+  };
 }
