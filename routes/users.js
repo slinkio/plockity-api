@@ -1,4 +1,4 @@
-var express          = require('express'),
+var express      = require('express'),
     usersHandler = require('../handlers/users');
 
 module.exports = function (app) {
@@ -7,10 +7,7 @@ module.exports = function (app) {
   usersRouter.get('/', usersHandler.fetchAll);
   usersRouter.get('/:id', usersHandler.fetchByID);
 
-  usersRouter.post('/', function (req, res, next) {
-    console.log("Hi I am alive");
-    next();
-  }, usersHandler.create);
+  usersRouter.post('/', usersHandler.create);
 
   usersRouter.put('/:id', usersHandler.update);
 

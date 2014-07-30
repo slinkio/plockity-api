@@ -16,7 +16,7 @@ var userSchema = new Schema({
     first:   String,
     last:    String
   },
-  apps:       [ { type : mongoose.Schema.ObjectId, ref : 'App' } ],
+  app: [ { type : mongoose.Schema.ObjectId, ref : 'App' } ],
   active:     Boolean,
   time_stamp: { type: String, default: momentDate() }
 });

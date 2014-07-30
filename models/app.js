@@ -8,7 +8,7 @@ var mongoose =   require('mongoose'),
 
 var appSchema = new Schema({
   name:      String,
-  creator:   Schema.Types.ObjectId,
+  creator:   { type : mongoose.Schema.ObjectId, ref : 'User' },
   domain:    String,
   active:    Boolean,
   purchased: {

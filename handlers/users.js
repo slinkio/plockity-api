@@ -20,7 +20,7 @@ exports.fetchByID = function (req, res, next) {
     });
   }
 
-  User.findById(id, function (err, user) {
+  User.findOne({ '_id': id }) .populate('apps').exec(function (err, user) {
     if(err) {
       return res.status(500).json({
         status: 'error',
@@ -43,7 +43,7 @@ exports.create = function (req, res, next) {
   console.log(req.body.user);
   var user_data = req.body.user;
 
-  if(!user_data.login.email || !user_data.login.password) {
+  if(!user_data || !user_data.login || !user_data.login.email || !user_data.login.password) {
     return res.status(500).json({
       status: 'error',
       error: 'Missing information to complete request.'
@@ -80,9 +80,39 @@ exports.create = function (req, res, next) {
 }
 
 exports.update = function (req, res, next) {
-  res.status(501).json({
-    status: 'error',
-    error: 'This route has not been implemented yet.'
+  var user_data = req.body.user;
+
+  if(!user_data || !user_data._id) {
+    return res.status(500).json({
+      status: 'error',
+      error: 'Missing information to complete request.'
+    });
+  }
+
+  User.findById(req.body.user._id, function (err, user) {
+    if (err) {
+      return res.status(500).json({
+        status: 'error',
+        error: err
+      });
+    }
+
+    for (var key in user_data) {
+      if(key !== "id" || key !== "_id" || key !== "login") {
+        user[key] = user_data[key];
+      }
+    }
+
+    user.save(function (err, record) {
+      if (err) {
+        return res.status(500).json({
+          status: 'error',
+          error: err
+        });
+      }
+
+      res.status(200).json(normalize.user(user));
+    });
   });
 }
 
