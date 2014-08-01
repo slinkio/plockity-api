@@ -20,7 +20,7 @@ exports.fetchByID = function (req, res, next) {
     });
   }
 
-  User.findOne({ '_id': id }) .populate('apps').exec(function (err, user) {
+  User.findById(id, function (err, user) {
     if(err) {
       return res.status(500).json({
         status: 'error',
@@ -111,7 +111,7 @@ exports.update = function (req, res, next) {
         });
       }
 
-      res.status(200).json(normalize.user(user));
+      res.status(200).json(normalize.user(record));
     });
   });
 }

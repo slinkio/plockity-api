@@ -4,7 +4,7 @@ var App      = require('../models/app'),
     normalize = require('../config/data-normalization');
 
 exports.fetchAll = function (req, res, next) {
-  App.find({}, function (err, apps) {
+  App.find().where('_id').in(req.query.ids).populate('plan').lean().exec(function (err, apps) {
     if(err) {
       return res.status(500).json({
         status: 'error',
@@ -17,9 +17,7 @@ exports.fetchAll = function (req, res, next) {
         status: 'not found'
       });
     } else {
-      res.status(200).json({
-        app: apps
-      });
+      res.status(200).json(normalize.apps(apps));
     }
   });
 }
@@ -34,7 +32,7 @@ exports.fetchByID = function (req, res, next) {
     });
   }
 
-  App.findById(id, function (err, app) {
+  App.findById(id).populate('plan').lean().exec(function (err, app) {
     if(err) {
       return res.status(500).json({
         status: 'error',
@@ -47,7 +45,7 @@ exports.fetchByID = function (req, res, next) {
         status: 'not found'
       });
     } else {
-      res.status(200).json(app);
+      res.status(200).json(normalize.app(app));
     }
   });
 }
@@ -63,6 +61,10 @@ exports.create = function (req, res, next) {
       error: 'Missing information to complete request.'
     });
   }
+  
+  delete app_data._id;
+
+  console.log(app_data);
 
   var app = new App(app_data);
 
@@ -73,17 +75,76 @@ exports.create = function (req, res, next) {
         error: err
       });
     }
+    console.log(record);
 
-    res.status(200).json({
-      app: record
+    App.findById(record._id).populate('plan').lean().exec(function (err, app) {
+      if(err) {
+        return res.status(500).json({
+          status: 'error',
+          error: err
+        });
+      }
+
+      if(!app) {
+        return res.status(404).json({
+          status: 'not found'
+        });
+      } else {
+        res.status(200).json(normalize.app(app));
+      }
     });
   });
 }
 
 exports.update = function (req, res, next) {
-  res.status(501).json({
-    status: 'error',
-    error: 'This route has not been implemented yet.'
+  var app_data = req.body.app;
+
+  if(!app_data || !app_data._id) {
+    return res.status(500).json({
+      status: 'error',
+      error: 'Missing information to complete request.'
+    });
+  }
+
+  App.findById(app_data._id, function (err, app) {
+    if(err) {
+      return res.status(500).json({
+        status: 'error',
+        error: err
+      });
+    }
+
+    for (var key in app_data) {
+      if(key !== "id" || key !== "_id") {
+        app[key] = app_data[key];
+      }
+    }
+
+    app.save(function (err, record) {
+      if (err) {
+        return res.status(500).json({
+          status: 'error',
+          error: err
+        });
+      }
+
+      App.findById(record._id).populate('plan').lean().exec(function (err, app) {
+        if(err) {
+          return res.status(500).json({
+            status: 'error',
+            error: err
+          });
+        }
+
+        if(!app) {
+          return res.status(404).json({
+            status: 'not found'
+          });
+        } else {
+          res.status(200).json(normalize.app(app));
+        }
+      });
+    });
   });
 }
 

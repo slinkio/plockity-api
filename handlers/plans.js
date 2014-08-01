@@ -47,7 +47,9 @@ exports.fetchByID = function (req, res, next) {
         status: 'not found'
       });
     } else {
-      res.status(200).json(plan);
+      res.status(200).json({
+        plan: plan
+      });
     }
   });
 }

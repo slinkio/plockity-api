@@ -11,8 +11,7 @@ var planSchema = new Schema({
   description: String,
   tagline:     String,
   title:       String,
-  features:    Array,
-  apps:        [ { type : mongoose.Schema.ObjectId, ref : 'App' } ]
+  features:    Array
 });
 
 module.exports = mongoose.model('Plan', planSchema);

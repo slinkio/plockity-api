@@ -9,6 +9,7 @@ var mongoose =   require('mongoose'),
 var appSchema = new Schema({
   name:      String,
   creator:   { type : mongoose.Schema.ObjectId, ref : 'User' },
+  plan:      { type : mongoose.Schema.ObjectId, ref : 'Plan' },
   domain:    String,
   active:    Boolean,
   purchased: {
