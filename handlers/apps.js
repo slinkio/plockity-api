@@ -99,14 +99,14 @@ exports.create = function (req, res, next) {
 exports.update = function (req, res, next) {
   var app_data = req.body.app;
 
-  if(!app_data || !app_data._id) {
+  if(!app_data || !app_data._id || !req.params.id) {
     return res.status(500).json({
       status: 'error',
       error: 'Missing information to complete request.'
     });
   }
 
-  App.findById(app_data._id, function (err, app) {
+  App.findById(req.params.id, function (err, app) {
     if(err) {
       return res.status(500).json({
         status: 'error',

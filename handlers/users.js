@@ -82,14 +82,14 @@ exports.create = function (req, res, next) {
 exports.update = function (req, res, next) {
   var user_data = req.body.user;
 
-  if(!user_data || !user_data._id) {
+  if(!user_data || !user_data._id || !req.params.id) {
     return res.status(500).json({
       status: 'error',
       error: 'Missing information to complete request.'
     });
   }
 
-  User.findById(req.body.user._id, function (err, user) {
+  User.findById(req.params.id, function (err, user) {
     if (err) {
       return res.status(500).json({
         status: 'error',
