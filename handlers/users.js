@@ -18,6 +18,10 @@ exports.fetchByID = function (req, res, next) {
     return respond.error.res(res, 'Please specify an ID in the resource url.');
   }
 
+  if(req.session.token_unsigned.type === 'user' && req.session.user._id.toString() !== id) {
+    return respond.code.unauthorized(res);
+  }
+
   User.findById(id, function (err, user) {
     if(err) {
       return respond.error.res(res, err);
@@ -80,6 +84,10 @@ exports.update = function (req, res, next) {
       status: 'error',
       error: 'Missing information to complete request.'
     });
+  }
+
+  if(req.session.token_unsigned.type === 'user' && req.session.user._id.toString() !== req.params.id) {
+    return respond.code.unauthorized(res);
   }
 
   User.findById(req.params.id, function (err, user) {

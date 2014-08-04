@@ -1,17 +1,18 @@
-var express      = require('express'),
-    usersHandler = require('../handlers/users');
+var express        = require('express'),
+    sessionHandler = require('../handlers/session'),
+    usersHandler   = require('../handlers/users');
 
 module.exports = function (app) {
   var usersRouter = express.Router();
 
-  usersRouter.get('/', usersHandler.fetchAll);
-  usersRouter.get('/:id', usersHandler.fetchByID);
+  usersRouter.get('/', sessionHandler.authorize, usersHandler.fetchAll);
+  usersRouter.get('/:id', sessionHandler.authorize, usersHandler.fetchByID);
 
   usersRouter.post('/', usersHandler.create);
 
-  usersRouter.put('/:id', usersHandler.update);
+  usersRouter.put('/:id', sessionHandler.authorize, usersHandler.update);
 
-  usersRouter.delete('/:id', usersHandler.del);
+  usersRouter.delete('/:id', sessionHandler.authorize, usersHandler.del);
   
   app.use('/api/users', usersRouter);
 };
