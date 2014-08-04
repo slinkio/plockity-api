@@ -134,7 +134,7 @@ function findActiveSession (query, callback) {
       return callback(err);
     }
 
-    if(records && records.length > 1) {
+    if(records && records.length > 0) {
       // Loop through the records
       records.forEach(function (record) {
         // If the record.expires is after the current time (still active)
