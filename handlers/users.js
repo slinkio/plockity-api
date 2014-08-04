@@ -1,6 +1,7 @@
 var User      = require('../models/user'),
     winston   = require('winston'),
     bcp       = require('bcrypt'),
+    respond   = require('./response'),
     normalize = require('../config/data-normalization');
 
 exports.fetchAll = function (req, res, next) {
@@ -14,24 +15,16 @@ exports.fetchByID = function (req, res, next) {
   var id = req.params.id;
 
   if(!id) {
-    return res.status(500).json({
-      status: 'error',
-      error: 'Please specify an ID in the resource url.'
-    });
+    return respond.error.res(res, 'Please specify an ID in the resource url.');
   }
 
   User.findById(id, function (err, user) {
     if(err) {
-      return res.status(500).json({
-        status: 'error',
-        error: err
-      });
+      return respond.error.res(res, err);
     }
 
     if(!user) {
-      return res.status(404).json({
-        status: 'not found'
-      });
+      return respond.code.notfound(res);
     } else {
       res.status(200).json(normalize.user(user));
     }
@@ -102,7 +95,7 @@ exports.update = function (req, res, next) {
     user.app          = user_data.app || user.app;
 
     user.save(function (err, record) {
-      if (err) {
+      if(err) {
         return res.status(500).json({
           status: 'error',
           error: err
