@@ -90,18 +90,16 @@ exports.update = function (req, res, next) {
   }
 
   User.findById(req.params.id, function (err, user) {
-    if (err) {
+    if(err) {
       return res.status(500).json({
         status: 'error',
         error: err
       });
     }
 
-    for (var key in user_data) {
-      if(key !== "id" || key !== "_id" || key !== "login") {
-        user[key] = user_data[key];
-      }
-    }
+    user.login.email  = user_data.login.email || user.login.email;
+    user.name.company = user_data.name || user.name;
+    user.app          = user_data.app || user.app;
 
     user.save(function (err, record) {
       if (err) {
