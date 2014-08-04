@@ -5,7 +5,7 @@ var moment        = require('moment'),
     User          = require('../models/user'),
     Session       = require('../models/session'),
     keygen        = require('keygenerator'),
-    handleError   = require('./error').resError,
+    respond       = require('./response'),
     _             = require('lodash');
 
 exports.sendGenerateToken = function (req, res, next) {
@@ -15,7 +15,7 @@ exports.sendGenerateToken = function (req, res, next) {
 
   findActiveSession(req.user._id, function (err, foundSession) {
     if(err) {
-      return handleError(res, err);
+      return respond.error.res(res, err);
     }
 
     if(foundSession) {
@@ -36,7 +36,9 @@ exports.sendGenerateToken = function (req, res, next) {
         ---
         Signing the jwt with a random id will obfuscate
         encrypted details and make it possible to
-        validate sessions.
+        validate sessions while making it impossible
+        to mess with the token itself. token.type will
+        always remain system set.
       */
       var json_token = jwt.encode({
         type:       "user",
@@ -58,7 +60,7 @@ exports.sendGenerateToken = function (req, res, next) {
       // Save the session and send the response
       session.save(function (err, record) {
         if(err) {
-          return handleError(res, err);
+          return respond.error.res(res, err, true);
         }
 
         return sendSession({
@@ -83,26 +85,29 @@ exports.authorize = function (req, res, next) {
 
   // Handle unauthorized access
   if(!token || !user_id) {
-    return sendUnauthorized(res, 'Please include a Session and User header to access this resource.');
+    return respond.code.unauthorized(res, 'Please include a Session and User header to access this resource.');
   }
 
-  findActiveSession(user_id, function (err, foundSession) {
+  findActiveSession({ token: token, user: user_id }, function (err, foundSession) {
     if(err) {
-      return handleError(res, err);
+      return respond.error.res(res, err);
     }
 
     // Handle unauthorized access
     if(!foundSession) {
-      return sendUnauthorized(res, 'No session was found. Please make sure you have logged in.');
+      return respond.code.unauthorized(res, 'No session was found. Please make sure you are logged in.');
     }
 
     // Refind the session to populate the user.
     Session.findById(foundSession._id).populate('user').exec(function (err, authorizedSession) {
       if(err) {
-        return handleError(res, err);
+        return respond.error.res(res, err);
       }
 
-      // Assign the session to a request global for routes to use
+      // Decode the json web token for use by handlers
+      authorizedSession.token_unsigned = jwt.decode(authorizedSession.token, authorizedSession.session_key);
+
+      // Assign the session to a request global for use by handlers
       req.session = authorizedSession;
 
       // Continue
@@ -115,21 +120,16 @@ exports.authorize = function (req, res, next) {
   Private Methods
 */
 
-function sendUnauthorized (res, msg) {
-  res.status(401).json({
-    status: 'unauthorized',
-    error: msg
-  });
-}
-
 function sessionExpiration () {
   return moment().add('hours', 2).format("YYYY/MM/DD HH:mm:ss");
 }
 
-function findActiveSession (user, callback) {
+function findActiveSession (query, callback) {
+  // Set the query up
+  var query = (typeof query === 'object') ? query : { user: query };
   var foundSession;
 
-  Session.find({ user: user }, function (err, records) {
+  Session.find(query, function (err, records) {
     if(err) {
       return callback(err);
     }
