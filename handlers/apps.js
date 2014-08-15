@@ -105,14 +105,14 @@ exports.create = function (req, res, next) {
 exports.update = function (req, res, next) {
   var app_data = req.body.app;
 
-  if(!app_data || !app_data._id || !req.params.id) {
+  if(!app_data || !req.params.id) {
     return res.status(500).json({
       status: 'error',
       error: 'Missing information to complete request.'
     });
   }
 
-  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.app || req.session.user.app.indexOf(app_data._id) < 0 ) ) {
+  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.app || req.session.user.app.indexOf(req.params.id) < 0 ) ) {
     return respond.code.unauthorized(res);
   }
 

@@ -115,14 +115,14 @@ exports.create = function (req, res, next) {
 exports.update = function (req, res, next) {
   var paymentMethod_data = req.body.paymentMethod;
 
-  if(!paymentMethod_data || !paymentMethod_data._id || !req.params.id) {
+  if(!paymentMethod_data || !req.params.id) {
     return res.status(500).json({
       status: 'error',
       error: 'Missing information to complete request.'
     });
   }
 
-  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(paymentMethod_data._id) < 0 ) ) {
+  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(req.params.id) < 0 ) ) {
     return respond.code.unauthorized(res);
   }
 
