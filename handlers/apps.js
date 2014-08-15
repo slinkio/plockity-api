@@ -5,11 +5,13 @@ var App       = require('../models/app'),
     normalize = require('../config/data-normalization');
 
 exports.fetchAll = function (req, res, next) {
-  if(!req.query.ids && req.session.token_unsigned.type === 'user') {
-    return respond.code.unauthorized(res, 'Specify ids to fetch if using GET /apps');
+  var query = req.query || {};
+
+  if(req.session.token_unsigned.type !== 'admin') {
+    query.user = req.session.token_unsigned.user_id;
   }
 
-  App.find().where('_id').in(req.query.ids).populate('plan').lean().exec(function (err, apps) {
+  App.find(query).where('_id').in(req.query.ids).populate('plan').lean().exec(function (err, apps) {
     if(err) {
       return respond.error.res(res, err, true);
     }
@@ -172,8 +174,6 @@ exports.del = function (req, res, next) {
       return respond.error.res(res, err, true);
     }
 
-    res.status(200).json({
-      status: 'ok'
-    });
+    respond.code.ok(res);
   });
 }

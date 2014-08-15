@@ -7,15 +7,11 @@ exports.user = function (user) {
     delete user.login.password;
   }
   
-  return {
-    user: user
-  };
+  return prefixType('user', user);
 }
 
 exports.app = function (app) {
-  return {
-    app: app
-  };
+  return prefixType('app', app);
 }
 
 exports.apps = function (apps) {
@@ -25,7 +21,24 @@ exports.apps = function (apps) {
     delete app.plan.__v;
     return app;
   });
-  return {
-    apps: apps
-  };
+
+  return prefixType('apps', apps);
+}
+
+exports.paymentMethod = function (paymentMethod) {
+  return prefixType('paymentMethod', paymentMethod);
+}
+
+exports.paymentMethods = function (paymentMethods) {
+  return prefixType('paymentMethod', paymentMethods);
+}
+
+/* Private */
+
+function prefixType (type, data) {
+  var o = {};
+
+  o[type] = data;
+
+  return o;
 }

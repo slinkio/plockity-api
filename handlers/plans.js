@@ -66,7 +66,7 @@ exports.create = function (req, res, next) {
     });
   }
 
-  if(req.session.token_unsigned.type === 'admin') {
+  if(req.session.token_unsigned.type !== 'admin') {
     return respond.code.unauthorized(res);
   }
 
@@ -88,7 +88,7 @@ exports.create = function (req, res, next) {
 
 exports.update = function (req, res, next) {
   // TODO: Middleware.adminOnly below
-  if(req.session.token_unsigned.type === 'admin') {
+  if(req.session.token_unsigned.type !== 'admin') {
     return respond.code.unauthorized(res);
   }
 
@@ -99,7 +99,7 @@ exports.update = function (req, res, next) {
 }
 
 exports.del = function (req, res, next) {
-  if(req.session.token_unsigned.type === 'admin') {
+  if(req.session.token_unsigned.type !== 'admin') {
     return respond.code.unauthorized(res);
   }
 

@@ -15,7 +15,7 @@ exports.sendGenerateToken = function (req, res, next) {
 
   findActiveSession(req.user._id, function (err, foundSession) {
     if(err) {
-      return respond.error.res(res, err);
+      return respond.error.res(res, err, true);
     }
 
     if(foundSession) {
@@ -25,48 +25,55 @@ exports.sendGenerateToken = function (req, res, next) {
         token:   foundSession.token
       });
     } else {
-      // Generate expiration string
-      var expiration = sessionExpiration();
-          
-      // Generate session_id with keygenerator
-      var session_id = keygen.session_id();
-
-      /* 
-        Sign a new json web token with the session_id.
-        ---
-        Signing the jwt with a random id will obfuscate
-        encrypted details and make it possible to
-        validate sessions while making it impossible
-        to mess with the token itself. token.type will
-        always remain system set.
-      */
-      var json_token = jwt.encode({
-        type:       "user",
-        credential: req.user.login.email,
-        id:         session_id
-      }, session_id);
-
-      // Build the session data object
-      var session_data = {
-        user:        req.user._id,
-        expires:     expiration,
-        token:       json_token,
-        session_key: session_id
-      };
-
-      // Create a new session from the data object
-      var session = new Session(session_data);
-
-      // Save the session and send the response
-      session.save(function (err, record) {
+      User.findById(req.user._id, function (err, userRecord) {
         if(err) {
           return respond.error.res(res, err, true);
         }
 
-        return sendSession({
-          user:    req.user._id.toString(),
-          expires: expiration,
-          token:   json_token
+        // Generate expiration string
+        var expiration = sessionExpiration();
+            
+        // Generate session_id with keygenerator
+        var session_id = keygen.session_id();
+
+        /* 
+          Sign a new json web token with the session_id.
+          ---
+          Signing the jwt with a random id will obfuscate
+          encrypted details and make it possible to
+          validate sessions while making it impossible
+          to mess with the token itself. token.type will
+          always remain system set.
+        */
+        var json_token = jwt.encode({
+          type:       userRecord.type,
+          credential: req.user.login.email,
+          user_id:    userRecord.id,
+          id:         session_id
+        }, session_id);
+
+        // Build the session data object
+        var session_data = {
+          user:        req.user._id,
+          expires:     expiration,
+          token:       json_token,
+          session_key: session_id
+        };
+
+        // Create a new session from the data object
+        var session = new Session(session_data);
+
+        // Save the session and send the response
+        session.save(function (err, record) {
+          if(err) {
+            return respond.error.res(res, err, true);
+          }
+
+          return sendSession({
+            user:    req.user._id.toString(),
+            expires: expiration,
+            token:   json_token
+          });
         });
       });
     } // if(foundSession) { ... } else { ... 

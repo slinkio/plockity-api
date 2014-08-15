@@ -16,8 +16,11 @@ var userSchema = new Schema({
     first:   String,
     last:    String
   },
+
   app: [ { type : mongoose.Schema.ObjectId, ref : 'App' } ],
-  active:     Boolean,
+  paymentMethod: [ { type : mongoose.Schema.ObjectId, ref : 'PaymentMethod' } ],
+
+  active:    Boolean,
   time_stamp: { type: String, default: momentDate() }
 });
 

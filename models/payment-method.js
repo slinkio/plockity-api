@@ -10,9 +10,10 @@ var paymentMethodSchema = new Schema({
   name:      String,
   // Relational
   customerId: { type : mongoose.Schema.ObjectId, ref : 'User' },
+  app:        [{ type : mongoose.Schema.ObjectId, ref : 'App' }],
 
   // Options
-  isDefault:  boolean,
+  isDefault: Boolean,
 
   // Customer Data
   address: {
@@ -22,6 +23,8 @@ var paymentMethodSchema = new Schema({
     state:   String,
     zipcode: String
   },
+
+  nonce:     String,
 
   // System
   methodError: String,

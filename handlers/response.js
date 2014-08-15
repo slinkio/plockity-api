@@ -34,5 +34,12 @@ exports.code = {
       status: 'Not Found',
       error: msg || 'That resource was not found or is unavailable.'
     });
+  },
+  ok: function (res, msg) {
+    if(msg) {
+      res.send(200, msg);
+    } else {
+      res.send(200);
+    }
   }
 }
