@@ -1,4 +1,5 @@
-var winston = require('winston');
+var winston = require('winston'),
+    mongooseConfig = require('./config/mongoose');
 
 winston.info('Starting server...');
 
@@ -10,3 +11,17 @@ var port = process.env.PORT || 3000;
 app.listen(port, function () {
   winston.info('Server listening on port', port, '...');
 });
+
+process.stdin.resume();//so the program will not close instantly
+
+function withExit ( options ) {
+  mongooseConfig.cleanup();
+
+  if( options.exit ) {
+    process.exit();
+  }
+}
+
+process.on('exit', withExit.bind(null, { clean: true }));
+
+process.on('SIGINT', withExit.bind(null, { exit: true }));

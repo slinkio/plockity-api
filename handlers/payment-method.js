@@ -12,10 +12,14 @@ exports.fetchAll = function (req, res, next) {
     query.customerId = req.session.token_unsigned.user_id;
   }
 
-  PaymentMethod.find(query).exec(function (err, paymentMethods) {
+  console.log(query);
+
+  PaymentMethod.find(query, function (err, paymentMethods) {
     if(err) {
       return respond.error.res(res, err, true);
     }
+
+    console.log(paymentMethods);
 
     if(!paymentMethods || paymentMethods.length < 1) {
       res.status(200).json(normalize.paymentMethods([]));
@@ -87,27 +91,11 @@ exports.create = function (req, res, next) {
     var paymentMethod = new PaymentMethod(paymentMethod_data);
 
     paymentMethod.save(function ( err, record ) {
-      if(err) {
+      if( err ) {
         return respond.error.res(res, err, true);
       }
-      console.log(record);
-
-      PaymentMethod.findById(record._id).exec(function (err, paymentMethod) {
-        if(err) {
-          return res.status(500).json({
-            status: 'error',
-            error: err
-          });
-        }
-
-        if(!paymentMethod) {
-          return res.status(404).json({
-            status: 'not found'
-          });
-        } else {
-          res.status(200).json(normalize.paymentMethod(paymentMethod));
-        }
-      });
+      
+      res.status(200).json(normalize.paymentMethod(record));
     });
   });
 }
@@ -116,10 +104,7 @@ exports.update = function (req, res, next) {
   var paymentMethod_data = req.body.paymentMethod;
 
   if(!paymentMethod_data || !req.params.id) {
-    return res.status(500).json({
-      status: 'error',
-      error: 'Missing information to complete request.'
-    });
+    return respond.error.res(res, 'Missing information to complete request.');
   }
 
   if(req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(req.params.id) < 0 ) ) {
@@ -128,42 +113,22 @@ exports.update = function (req, res, next) {
 
   PaymentMethod.findById(req.params.id, function (err, paymentMethod) {
     if(err) {
-      return res.status(500).json({
-        status: 'error',
-        error: err
-      });
+      return respond.error.res(res, err, true);
     }
 
-    for (var key in paymentMethod_data) {
-      if(key !== "id" || key !== "_id") {
-        paymentMethod[key] = paymentMethod_data[key];
-      }
-    }
+    paymentMethod.name = paymentMethod_data.name || paymentMethod.name;
+    paymentMethod.customerId = paymentMethod_data.customerId || paymentMethod.customerId;
+    paymentMethod.app = paymentMethod_data.app || paymentMethod.app;
+    paymentMethod.isDefault = paymentMethod_data.isDefault;
+    paymentMethod.address = paymentMethod_data.address || paymentMethod.address;
+    paymentMethod.nonce = paymentMethod_data.nonce || paymentMethod.nonce;
 
     paymentMethod.save(function (err, record) {
-      if (err) {
-        return res.status(500).json({
-          status: 'error',
-          error: err
-        });
+      if(err) {
+        return respond.error.res(res, err, true);
       }
-
-      PaymentMethod.findById(record._id).exec(function (err, paymentMethod) {
-        if(err) {
-          return res.status(500).json({
-            status: 'error',
-            error: err
-          });
-        }
-
-        if(!paymentMethod) {
-          return res.status(404).json({
-            status: 'not found'
-          });
-        } else {
-          res.status(200).json(normalize.paymentMethod(paymentMethod));
-        }
-      });
+      
+      res.status(200).json(normalize.paymentMethod(record));
     });
   });
 }

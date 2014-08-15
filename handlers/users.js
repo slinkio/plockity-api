@@ -97,11 +97,13 @@ exports.update = function (req, res, next) {
         error: err
       });
     }
-
+    console.log('updating user');
     user.login.email   = user_data.login.email || user.login.email;
     user.name.company  = user_data.name || user.name;
     user.app           = user_data.app || user.app;
     user.paymentMethod = user_data.paymentMethod || user_data.paymentMethod;
+
+    console.log(user);
 
     user.save(function (err, record) {
       if(err) {

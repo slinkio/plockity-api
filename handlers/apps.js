@@ -124,32 +124,23 @@ exports.update = function (req, res, next) {
       });
     }
 
-    for (var key in app_data) {
-      if(key !== "id" || key !== "_id") {
-        app[key] = app_data[key];
-      }
-    }
+    app.name = app_data.name || app.name;
+    app.plan = app_data.plan || app.plan;
+    app.paymentMethod = app_data.paymentMethod || app.paymentMethod;
+    app.domain = app_data.domain || app.domain;
 
     app.save(function (err, record) {
       if (err) {
-        return res.status(500).json({
-          status: 'error',
-          error: err
-        });
+        return respond.error.res(res, err, true);
       }
 
       App.findById(record._id).populate('plan').lean().exec(function (err, app) {
         if(err) {
-          return res.status(500).json({
-            status: 'error',
-            error: err
-          });
+          return respond.error.res(res, err, true);
         }
 
         if(!app) {
-          return res.status(404).json({
-            status: 'not found'
-          });
+          return respond.code.notfound(res);
         } else {
           res.status(200).json(normalize.app(app));
         }
