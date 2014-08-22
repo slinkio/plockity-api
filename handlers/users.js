@@ -48,6 +48,7 @@ exports.create = function (req, res, next) {
   }
 
   user_data.active = true;
+  user_data.type = 'user';
 
   bcp.hash(user_data.login.password, 8, function(err, hash) {
     if(err) {
@@ -74,7 +75,7 @@ exports.create = function (req, res, next) {
       });
     });
   });
-}
+};
 
 exports.update = function (req, res, next) {
   var user_data = req.body.user;
@@ -116,7 +117,7 @@ exports.update = function (req, res, next) {
       res.status(200).json(normalize.user(record));
     });
   });
-}
+};
 
 exports.del = function (req, res, next) {
   res.status(501).json({
