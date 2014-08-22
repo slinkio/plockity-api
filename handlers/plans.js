@@ -12,17 +12,11 @@ exports.fetchAll = function (req, res, next) {
       });
     }
 
-    if(!plans || plans.length < 1) {
-      return res.status(404).json({
-        status: 'not found'
-      });
-    } else {
-      res.status(200).json({
-        plan: plans
-      });
-    }
+    res.status(200).json({
+      plan: plans
+    });
   });
-}
+};
 
 exports.fetchByID = function (req, res, next) {
   var id = req.params.id;
@@ -55,6 +49,10 @@ exports.fetchByID = function (req, res, next) {
 }
 
 exports.create = function (req, res, next) {
+  if(req.session.token_unsigned.type !== 'admin') {
+    return respond.code.unauthorized(res);
+  }
+
   winston.info("Creating plan");
   console.log(req.body.plan);
   var plan_data = req.body.plan;
@@ -64,10 +62,6 @@ exports.create = function (req, res, next) {
       status: 'error',
       error: 'Missing information to complete request.'
     });
-  }
-
-  if(req.session.token_unsigned.type !== 'admin') {
-    return respond.code.unauthorized(res);
   }
 
   var plan = new Plan(plan_data);
@@ -84,7 +78,7 @@ exports.create = function (req, res, next) {
       plan: record
     });
   });
-}
+};
 
 exports.update = function (req, res, next) {
   // TODO: Middleware.adminOnly below
@@ -96,7 +90,7 @@ exports.update = function (req, res, next) {
     status: 'error',
     error: 'This route has not been implemented yet.'
   });
-}
+};
 
 exports.del = function (req, res, next) {
   if(req.session.token_unsigned.type !== 'admin') {
@@ -107,4 +101,4 @@ exports.del = function (req, res, next) {
     status: 'error',
     error: 'This route has not been implemented yet.'
   });
-}
+};
