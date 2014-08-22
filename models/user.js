@@ -17,6 +17,8 @@ var userSchema = new Schema({
     last:    String
   },
 
+  type: String,
+
   app: [ { type : mongoose.Schema.ObjectId, ref : 'App' } ],
   paymentMethod: [ { type : mongoose.Schema.ObjectId, ref : 'PaymentMethod' } ],
 
