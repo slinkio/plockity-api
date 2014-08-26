@@ -1,5 +1,6 @@
 var User      = require('../models/user'),
     winston   = require('winston'),
+    chalk     = require('chalk'),
     bcp       = require('bcrypt'),
     respond   = require('./response'),
     normalize = require('../config/data-normalization');
@@ -9,7 +10,7 @@ exports.fetchAll = function (req, res, next) {
     status: 'error',
     error: 'This route has not been implemented yet.'
   });
-}
+};
 
 exports.fetchByID = function (req, res, next) {
   var id = req.params.id;
@@ -26,14 +27,14 @@ exports.fetchByID = function (req, res, next) {
     if(err) {
       return respond.error.res(res, err);
     }
-
+    console.log(chalk.inverse('Fetching user by id', user));
     if(!user) {
       return respond.code.notfound(res);
     } else {
       res.status(200).json(normalize.user(user));
     }
   });
-}
+};
 
 exports.create = function (req, res, next) {
   winston.info("Creating user");
@@ -98,13 +99,13 @@ exports.update = function (req, res, next) {
         error: err
       });
     }
-    console.log('updating user');
+
     user.login.email   = user_data.login.email || user.login.email;
     user.name.company  = user_data.name || user.name;
     user.app           = user_data.app || user.app;
     user.paymentMethod = user_data.paymentMethod || user_data.paymentMethod;
 
-    console.log(user);
+    console.log(chalk.inverse('updating user w/', user));
 
     user.save(function (err, record) {
       if(err) {
@@ -124,4 +125,4 @@ exports.del = function (req, res, next) {
     status: 'error',
     error: 'This route has not been implemented yet.'
   });
-}
+};

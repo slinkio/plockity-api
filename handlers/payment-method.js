@@ -27,7 +27,7 @@ exports.fetchAll = function (req, res, next) {
       res.status(200).json(normalize.paymentMethods(paymentMethods));
     }
   });
-}
+};
 
 exports.fetchByID = function (req, res, next) {
   var id = req.params.id;
@@ -59,7 +59,7 @@ exports.fetchByID = function (req, res, next) {
       res.status(200).json(normalize.paymentMethod(paymentMethod));
     }
   });
-}
+};
 
 exports.create = function (req, res, next) {
   winston.info("Creating paymentMethod");
@@ -98,7 +98,7 @@ exports.create = function (req, res, next) {
       res.status(200).json(normalize.paymentMethod(record));
     });
   });
-}
+};
 
 exports.update = function (req, res, next) {
   var paymentMethod_data = req.body.paymentMethod;
@@ -131,7 +131,7 @@ exports.update = function (req, res, next) {
       res.status(200).json(normalize.paymentMethod(record));
     });
   });
-}
+};
 
 exports.del = function (req, res, next) {
   var id = req.params.id;
@@ -140,15 +140,19 @@ exports.del = function (req, res, next) {
     return respond.error.res(res, 'Please specify an ID in the resource url.');
   }
 
-  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(id) < 0 ) ) {
-    return respond.code.unauthorized(res);
+  var query = {
+    _id: id
+  };
+
+  if( req.session.token_unsigned.type === 'user' ) {
+    query.customer_id = req.session.user.user_id;
   }
 
-  PaymentMethod.remove({ _id: id }, function (err) {
+  PaymentMethod.remove(query, function ( err ) {
     if(err) {
       return respond.error.res(res, err, true);
     }
 
     respond.code.ok(res);
   });
-}
+};

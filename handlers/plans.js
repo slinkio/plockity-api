@@ -1,7 +1,8 @@
 var Plan      = require('../models/plan'),
     winston   = require('winston'),
     bcp       = require('bcrypt'),
-    normalize = require('../config/data-normalization');
+    normalize = require('../config/data-normalization'),
+    respond   = require('./response');
 
 exports.fetchAll = function (req, res, next) {
   Plan.find({}, function (err, plans) {
@@ -46,7 +47,7 @@ exports.fetchByID = function (req, res, next) {
       });
     }
   });
-}
+};
 
 exports.create = function (req, res, next) {
   if(req.session.token_unsigned.type !== 'admin') {
@@ -92,13 +93,22 @@ exports.update = function (req, res, next) {
   });
 };
 
-exports.del = function (req, res, next) {
-  if(req.session.token_unsigned.type !== 'admin') {
-    return respond.code.unauthorized(res);
+exports.del = function ( req, res, next ) {
+  if( req.session.token_unsigned.type !== 'admin' ) {
+    return respond.code.unauthorized( res );
   }
 
-  res.status(501).json({
-    status: 'error',
-    error: 'This route has not been implemented yet.'
+  var id = req.params.id;
+
+  if( !id ) {
+    return respond.error.res( res, 'Please specify an ID in the resource url.' );
+  }
+
+  Plan.remove({ _id: id }, function ( err ) {
+    if( err ) {
+      return respond.error.res(res, err, true);
+    }
+
+    respond.code.ok(res);
   });
 };

@@ -8,11 +8,11 @@ exports.user = function (user) {
   }
   
   return prefixType('user', user);
-}
+};
 
 exports.app = function (app) {
   return prefixType('app', app);
-}
+};
 
 exports.apps = function (apps) {
   apps = apps.map(function (app) {
@@ -22,16 +22,16 @@ exports.apps = function (apps) {
     return app;
   });
 
-  return prefixType('apps', apps);
-}
+  return prefixType('app', apps);
+};
 
 exports.paymentMethod = function (paymentMethod) {
   return prefixType('paymentMethod', paymentMethod);
-}
+};
 
 exports.paymentMethods = function (paymentMethods) {
   return prefixType('paymentMethod', paymentMethods);
-}
+};
 
 /* Private */
 
