@@ -22,7 +22,7 @@ exports.fetchAll = function (req, res, next) {
       res.status(200).json(normalize.apps(apps));
     }
   });
-}
+};
 
 exports.fetchByID = function (req, res, next) {
   var id = req.params.id;
@@ -54,7 +54,7 @@ exports.fetchByID = function (req, res, next) {
       res.status(200).json(normalize.app(app));
     }
   });
-}
+};
 
 exports.create = function (req, res, next) {
   winston.info("Creating app");
@@ -100,7 +100,7 @@ exports.create = function (req, res, next) {
       }
     });
   });
-}
+};
 
 exports.update = function (req, res, next) {
   var app_data = req.body.app;
@@ -147,7 +147,7 @@ exports.update = function (req, res, next) {
       });
     });
   });
-}
+};
 
 exports.del = function (req, res, next) {
   var id = req.params.id;
@@ -167,4 +167,4 @@ exports.del = function (req, res, next) {
 
     respond.code.ok(res);
   });
-}
+};
