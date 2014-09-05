@@ -11,6 +11,7 @@ var appSchema = new Schema({
   creator:   { type: mongoose.Schema.ObjectId, ref: 'User' },
   plan:      { type: mongoose.Schema.ObjectId, ref: 'Plan' },
   paymentMethod: { type: mongoose.Schema.ObjectId, ref: 'PaymentMethod' },
+  subscriptionId: String,
   domain:    String,
   active:    Boolean,
   purchased: {

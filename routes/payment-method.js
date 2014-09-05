@@ -5,14 +5,16 @@ var express        = require('express'),
 module.exports = function (app) {
   var paymentMethodRouter = express.Router();
 
-  paymentMethodRouter.get('/', sessionHandler.authorize, paymentMethodHandler.fetchAll);
-  paymentMethodRouter.get('/:id', sessionHandler.authorize, paymentMethodHandler.fetchByID);
+  paymentMethodRouter.use( sessionHandler.authorize );
+
+  paymentMethodRouter.get('/', paymentMethodHandler.fetchAll);
+  paymentMethodRouter.get('/:id', paymentMethodHandler.fetchByID);
 
   paymentMethodRouter.post('/', paymentMethodHandler.create);
 
-  paymentMethodRouter.put('/:id', sessionHandler.authorize, paymentMethodHandler.update);
+  paymentMethodRouter.put('/:id', paymentMethodHandler.update);
 
-  paymentMethodRouter.delete('/:id', sessionHandler.authorize, paymentMethodHandler.del);
-  
+  paymentMethodRouter.delete('/:id', paymentMethodHandler.del);
+
   app.use('/api/paymentMethods', paymentMethodRouter);
 };

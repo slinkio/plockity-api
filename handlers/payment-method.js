@@ -5,23 +5,26 @@ var PaymentMethod = require('../models/payment-method'),
     respond       = require('./response'),
     normalize     = require('../config/data-normalization');
 
-exports.fetchAll = function (req, res, next) {
+var Promise = require('bluebird'), // jshint ignore:line
+    braintreePaymentMethod = require('../config/braintree').init().paymentMethod;
+
+exports.fetchAll = function ( req, res, next ) {
   var query = req.query || {};
 
-  if(req.session.token_unsigned.type !== 'admin') {
+  if( req.session.token_unsigned.type !== 'admin' ) {
     query.customerId = req.session.token_unsigned.user_id;
   }
 
   console.log(query);
 
-  PaymentMethod.find(query, function (err, paymentMethods) {
-    if(err) {
+  PaymentMethod.find(query).select('-braintreeToken').exec(function ( err, paymentMethods ) {
+    if( err ) {
       return respond.error.res(res, err, true);
     }
 
     console.log(paymentMethods);
 
-    if(!paymentMethods || paymentMethods.length < 1) {
+    if( !paymentMethods || paymentMethods.length < 1 ) {
       res.status(200).json(normalize.paymentMethods([]));
     } else {
       res.status(200).json(normalize.paymentMethods(paymentMethods));
@@ -29,44 +32,44 @@ exports.fetchAll = function (req, res, next) {
   });
 };
 
-exports.fetchByID = function (req, res, next) {
+exports.fetchByID = function ( req, res, next ) {
   var id = req.params.id;
 
-  if(!id) {
+  if( !id ) {
     return res.status(500).json({
       status: 'error',
       error: 'Please specify an ID in the resource url.'
     });
   }
 
-  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(id) < 0 ) ) {
+  if( req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(id) < 0 ) ) {
     return respond.code.unauthorized(res);
   }
 
   PaymentMethod.findById(id).exec(function (err, paymentMethod) {
-    if(err) {
+    if( err ) {
       return res.status(500).json({
         status: 'error',
         error: err
       });
     }
 
-    if(!paymentMethod) {
+    if( !paymentMethod ) {
       return res.status(404).json({
         status: 'not found'
       });
     } else {
-      res.status(200).json(normalize.paymentMethod(paymentMethod));
+      res.status(200).json( normalize.paymentMethod(paymentMethod) );
     }
   });
 };
 
-exports.create = function (req, res, next) {
+exports.create = function ( req, res, next ) {
   winston.info("Creating paymentMethod");
   console.log(req.body.paymentMethod);
   var paymentMethod_data = req.body.paymentMethod;
 
-  if(!paymentMethod_data || !paymentMethod_data.name || !paymentMethod_data.nonce) {
+  if( !paymentMethod_data || !paymentMethod_data.name || !paymentMethod_data.nonce ) {
     return res.status(500).json({
       status: 'error',
       error: 'Missing information to complete request.'
@@ -75,68 +78,89 @@ exports.create = function (req, res, next) {
   
   delete paymentMethod_data._id;
 
-  console.log(paymentMethod_data);
-
   PaymentMethod.findOne({ customerId: paymentMethod_data.customerId, nonce: paymentMethod_data.nonce }, function ( err, record ) {
     if( err ) {
       return respond.error.res(res, err, true);
     }
 
-    console.log('record?', record);
-
     if( record && record._id ) {
       return respond.error.res(res, 'That payment method already exists.');
     }
 
-    var paymentMethod = new PaymentMethod(paymentMethod_data);
+    PaymentMethod.find({ customerId: paymentMethod_data.customerId }, function ( err, paymentMethods ) {
 
-    paymentMethod.save(function ( err, record ) {
-      if( err ) {
-        return respond.error.res(res, err, true);
-      }
-      
-      res.status(200).json(normalize.paymentMethod(record));
+      braintreePaymentMethod.create({
+        customerId:         req.session.token_unsigned.user_id,
+        paymentMethodNonce: paymentMethod_data.nonce,
+        billingAddress: {
+          streetAddress:   paymentMethod_data.address.line1,
+          extendedAddress: paymentMethod_data.address.line2,
+          locality:        paymentMethod_data.address.city,
+          postalCode:      paymentMethod_data.address.zipcode,
+          region:          paymentMethod_data.address.state
+        },
+        options: {
+          makeDefault: ( paymentMethods.length < 1 )
+        }
+      }, function ( err, btPm ) {
+        if( err ) {
+          console.error( err );
+          throw new Error( err );
+        }
+
+        paymentMethod_data.token = btPm.token;
+
+        var paymentMethod = new PaymentMethod(paymentMethod_data);
+
+        paymentMethod.save(function ( err, record ) {
+          if( err ) {
+            return respond.error.res(res, err, true);
+          }
+
+          res.status(200).json( normalize.paymentMethod(record) );
+        });
+      });
     });
   });
 };
 
-exports.update = function (req, res, next) {
+exports.update = function ( req, res, next ) {
   var paymentMethod_data = req.body.paymentMethod;
 
-  if(!paymentMethod_data || !req.params.id) {
+  if( !paymentMethod_data || !req.params.id ) {
     return respond.error.res(res, 'Missing information to complete request.');
   }
 
-  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(req.params.id) < 0 ) ) {
+  if( req.session.token_unsigned.type === 'user' && ( !req.session.user.paymentMethod || req.session.user.paymentMethod.indexOf(req.params.id) < 0 ) ) {
     return respond.code.unauthorized(res);
   }
 
-  PaymentMethod.findById(req.params.id, function (err, paymentMethod) {
-    if(err) {
+  PaymentMethod.findById(req.params.id, function ( err, paymentMethod ) {
+    if( err ) {
       return respond.error.res(res, err, true);
     }
 
-    paymentMethod.name = paymentMethod_data.name || paymentMethod.name;
+    paymentMethod.name       = paymentMethod_data.name || paymentMethod.name;
     paymentMethod.customerId = paymentMethod_data.customerId || paymentMethod.customerId;
-    paymentMethod.app = paymentMethod_data.app || paymentMethod.app;
-    paymentMethod.isDefault = paymentMethod_data.isDefault;
-    paymentMethod.address = paymentMethod_data.address || paymentMethod.address;
-    paymentMethod.nonce = paymentMethod_data.nonce || paymentMethod.nonce;
+    paymentMethod.app        = paymentMethod_data.app || paymentMethod.app;
+    paymentMethod.isDefault  = paymentMethod_data.isDefault;
+    paymentMethod.address    = paymentMethod_data.address || paymentMethod.address;
+    paymentMethod.nonce      = paymentMethod_data.nonce || paymentMethod.nonce;
 
-    paymentMethod.save(function (err, record) {
+    paymentMethod.save(function ( err, record ) {
       if(err) {
         return respond.error.res(res, err, true);
       }
-      
-      res.status(200).json(normalize.paymentMethod(record));
+
+      res.status(200).json( normalize.paymentMethod(record) );
     });
   });
 };
 
-exports.del = function (req, res, next) {
+exports.del = function ( req, res, next ) {
   var id = req.params.id;
 
-  if(!id) {
+  if( !id ) {
     return respond.error.res(res, 'Please specify an ID in the resource url.');
   }
 
@@ -149,7 +173,7 @@ exports.del = function (req, res, next) {
   }
 
   PaymentMethod.remove(query, function ( err ) {
-    if(err) {
+    if( err ) {
       return respond.error.res(res, err, true);
     }
 

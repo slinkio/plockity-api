@@ -25,6 +25,7 @@ var paymentMethodSchema = new Schema({
   },
 
   nonce:     String,
+  token:     String,
 
   // System
   methodError: String,

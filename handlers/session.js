@@ -78,7 +78,7 @@ exports.sendGenerateToken = function (req, res, next) {
       });
     } // if(foundSession) { ... } else { ... 
   });
-}
+};
 
 /*
   The following export is a middleware function
@@ -121,7 +121,7 @@ exports.authorize = function (req, res, next) {
       next();
     });
   });
-}
+};
 
 /*
   Private Methods
@@ -133,7 +133,8 @@ function sessionExpiration () {
 
 function findActiveSession (query, callback) {
   // Set the query up
-  var query = (typeof query === 'object') ? query : { user: query };
+  query = (typeof query === 'object') ? query : { user: query };
+
   var foundSession;
 
   Session.find(query, function (err, records) {
@@ -162,4 +163,4 @@ function findActiveSession (query, callback) {
       return callback();
     }
   });
-}
+};

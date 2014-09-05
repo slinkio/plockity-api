@@ -10,18 +10,11 @@ exports.user = function (user) {
   return prefixType('user', user);
 };
 
-exports.app = function (app) {
+exports.app = function ( app ) {
   return prefixType('app', app);
 };
 
-exports.apps = function (apps) {
-  apps = apps.map(function (app) {
-    app.plan.id = app.plan._id;
-    delete app.plan._id;
-    delete app.plan.__v;
-    return app;
-  });
-
+exports.apps = function ( apps ) {
   return prefixType('app', apps);
 };
 

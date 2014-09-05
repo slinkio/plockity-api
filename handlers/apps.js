@@ -4,23 +4,40 @@ var App       = require('../models/app'),
     respond   = require('./response'),
     normalize = require('../config/data-normalization');
 
+var subscription = require('../lib/braintree/subscription');
+
 exports.fetchAll = function (req, res, next) {
   var query = req.query || {};
 
   if(req.session.token_unsigned.type !== 'admin') {
-    query.user = req.session.token_unsigned.user_id;
+    query.creator = req.session.token_unsigned.user_id;
   }
 
-  App.find(query).where('_id').in(req.query.ids).populate('plan').lean().exec(function (err, apps) {
+  console.log(req.session.token_unsigned);
+
+  App.find(query).populate('plan paymentMethod').lean().exec(function (err, apps) {
+
+    console.log(apps[0]);
     if(err) {
-      return respond.error.res(res, err, true);
+      return respond.error.res( res, err, true );
     }
 
-    if(!apps || apps.length < 1) {
-      return respond.code.notfound(res);
+    if( !apps || apps.length < 1 ) {
+
+      return res.status(200).json( normalize.apps( apps ) );
+
     } else {
-      res.status(200).json(normalize.apps(apps));
-    }
+
+      subscription.attach( apps ).then(function ( apps ) {
+
+        res.status(200).json( normalize.apps( apps ) );
+
+      }).catch(function ( err ) {
+
+        respond.error.res( res, err, true );
+
+      });
+    } // ./ if( !apps || apps.length < 1 )
   });
 };
 
@@ -38,20 +55,26 @@ exports.fetchByID = function (req, res, next) {
     return respond.code.unauthorized(res);
   }
 
-  App.findById(id).populate('plan').lean().exec(function (err, app) {
-    if(err) {
-      return res.status(500).json({
-        status: 'error',
-        error: err
-      });
+  App.findById(id).populate('plan paymentMethod').lean().exec(function ( err, app ) {
+    if( err ) {
+      return respond.error.res( res, err, true );
     }
 
     if(!app) {
-      return res.status(404).json({
-        status: 'not found'
-      });
+
+      return respond.code.notfound( res );
+
     } else {
-      res.status(200).json(normalize.app(app));
+
+      subscription.attachOne( app ).then(function ( app ) {
+
+        res.status(200).json( normalize.app( app ) );
+
+      }).catch(function ( err ) {
+
+        respond.error.res( res, err, true );
+
+      });
     }
   });
 };
@@ -83,7 +106,7 @@ exports.create = function (req, res, next) {
     }
     console.log(record);
 
-    App.findById(record._id).populate('plan').lean().exec(function (err, app) {
+    App.findById(record._id).populate('plan paymentMethod').lean().exec(function (err, app) {
       if(err) {
         return res.status(500).json({
           status: 'error',
@@ -134,7 +157,7 @@ exports.update = function (req, res, next) {
         return respond.error.res(res, err, true);
       }
 
-      App.findById(record._id).populate('plan').lean().exec(function (err, app) {
+      App.findById(record._id).populate('plan paymentMethod').lean().exec(function (err, app) {
         if(err) {
           return respond.error.res(res, err, true);
         }
@@ -156,7 +179,7 @@ exports.del = function (req, res, next) {
     return respond.error.res(res, 'Please specify an ID in the resource url.');
   }
 
-  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.app || req.session.user.app.indexOf(id) < 0 ) ) {
+  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.app || req.session.user.app.indexOf( id ) < 0 ) ) {
     return respond.code.unauthorized(res);
   }
 
