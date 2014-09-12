@@ -89,37 +89,18 @@ exports.create = function ( req, res, next ) {
 
     PaymentMethod.find({ customerId: paymentMethod_data.customerId }, function ( err, paymentMethods ) {
 
-      braintreePaymentMethod.create({
-        customerId:         req.session.token_unsigned.user_id,
-        paymentMethodNonce: paymentMethod_data.nonce,
-        billingAddress: {
-          streetAddress:   paymentMethod_data.address.line1,
-          extendedAddress: paymentMethod_data.address.line2,
-          locality:        paymentMethod_data.address.city,
-          postalCode:      paymentMethod_data.address.zipcode,
-          region:          paymentMethod_data.address.state
-        },
-        options: {
-          makeDefault: ( paymentMethods.length < 1 )
-        }
-      }, function ( err, btPm ) {
+      paymentMethod_data.isDefault = paymentMethods.length < 1;
+
+      var paymentMethod = new PaymentMethod(paymentMethod_data);
+
+      paymentMethod.save(function ( err, record ) {
         if( err ) {
-          console.error( err );
-          throw new Error( err );
+          return respond.error.res(res, err, true);
         }
 
-        paymentMethod_data.token = btPm.token;
-
-        var paymentMethod = new PaymentMethod(paymentMethod_data);
-
-        paymentMethod.save(function ( err, record ) {
-          if( err ) {
-            return respond.error.res(res, err, true);
-          }
-
-          res.status(200).json( normalize.paymentMethod(record) );
-        });
+        res.status(200).json( normalize.paymentMethod(record) );
       });
+
     });
   });
 };
@@ -140,12 +121,12 @@ exports.update = function ( req, res, next ) {
       return respond.error.res(res, err, true);
     }
 
-    paymentMethod.name       = paymentMethod_data.name || paymentMethod.name;
+    paymentMethod.name       = paymentMethod_data.name       || paymentMethod.name;
     paymentMethod.customerId = paymentMethod_data.customerId || paymentMethod.customerId;
-    paymentMethod.app        = paymentMethod_data.app || paymentMethod.app;
+    paymentMethod.app        = paymentMethod_data.app        || paymentMethod.app;
+    paymentMethod.address    = paymentMethod_data.address    || paymentMethod.address;
+    paymentMethod.nonce      = paymentMethod_data.nonce      || paymentMethod.nonce;
     paymentMethod.isDefault  = paymentMethod_data.isDefault;
-    paymentMethod.address    = paymentMethod_data.address || paymentMethod.address;
-    paymentMethod.nonce      = paymentMethod_data.nonce || paymentMethod.nonce;
 
     paymentMethod.save(function ( err, record ) {
       if(err) {

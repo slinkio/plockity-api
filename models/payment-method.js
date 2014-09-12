@@ -2,9 +2,11 @@
   Payment Method - Server Data Model
 */
 
-var mongoose =   require('mongoose'),
-    Schema =     mongoose.Schema,
+var mongoose   = require('mongoose'),
+    Schema     = mongoose.Schema,
     momentDate = require('../utils/moment-date');
+
+var btPaymentMethod = require('../lib/braintree/payment-method');
 
 var paymentMethodSchema = new Schema({
   name:      String,
@@ -32,4 +34,30 @@ var paymentMethodSchema = new Schema({
   time_stamp: { type: String, default: momentDate() }
 });
 
+/*
+  Statics & Hooks
+*/
+
+paymentMethodSchema.pre('save', function ( next ) {
+  btPaymentMethod.remove( this ).then(function ( paymentMethod ) {
+    btPaymentMethod.save( paymentMethod ).then(function ( paymentMethod ) {
+
+      console.log('saved paymentmethod in braintree');
+      this.token = paymentMethod.token;
+
+      next();
+
+    }).catch( next );
+  }).catch( next );
+});
+
+paymentMethodSchema.post('remove', function ( doc ) {
+  btPaymentMethod.remove( doc ).then(function ( doc ) {
+    console.log('Removed pm from braintree');
+  }).catch(function ( err ) {
+    throw new Error( err );
+  });
+});
+
+// Export
 module.exports = mongoose.model('PaymentMethod', paymentMethodSchema);

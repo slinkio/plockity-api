@@ -8,17 +8,17 @@ var mongoose =   require('mongoose'),
 
 var appSchema = new Schema({
   name:      String,
-  creator:   { type: mongoose.Schema.ObjectId, ref: 'User' },
-  plan:      { type: mongoose.Schema.ObjectId, ref: 'Plan' },
+
+  creator:       { type: mongoose.Schema.ObjectId, ref: 'User' },
+  plan:          { type: mongoose.Schema.ObjectId, ref: 'Plan' },
   paymentMethod: { type: mongoose.Schema.ObjectId, ref: 'PaymentMethod' },
+
   subscriptionId: String,
-  domain:    String,
-  active:    Boolean,
-  purchased: {
-    product: String,
-    expiry:  String
-  },
-  requests:  Number,
+  subscription:   Object,
+  domain:         String,
+  active:         Boolean,
+  requests:       Number,
+
   time_stamp: { type: String, default: momentDate() }
 });
 
