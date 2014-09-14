@@ -1,5 +1,6 @@
-var winston = require('winston'),
-    mongooseConfig = require('./config/mongoose');
+var winston        = require('winston'),
+    mongooseConfig = require('./config/mongoose'),
+    initializers   = require('./initializer').init();
 
 winston.info('Starting server...');
 

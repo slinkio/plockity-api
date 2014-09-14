@@ -26,7 +26,7 @@ exports.init = function (app) {
   winston.info('Setting server options...');
 
   app.enable('trust proxy');
-  app.set('x-powered-by', false);
+  app.set('x-powered-by', 'Plockity');
 
   return app;
 };
