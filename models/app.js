@@ -13,6 +13,7 @@ var appSchema = new Schema({
   plan:          { type: mongoose.Schema.ObjectId, ref: 'Plan' },
   paymentMethod: { type: mongoose.Schema.ObjectId, ref: 'PaymentMethod' },
 
+  usingDefault:   Boolean,
   subscriptionId: String,
   subscription:   Object,
   domain:         String,
