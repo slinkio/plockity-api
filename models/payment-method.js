@@ -43,20 +43,18 @@ paymentMethodSchema.pre('save', function ( next ) {
     btPaymentMethod.save( paymentMethod ).then(function ( paymentMethod ) {
 
       console.log('saved paymentmethod in braintree');
-      this.token = paymentMethod.token;
 
-      next();
+      next.call( paymentMethod );
 
     }).catch( next );
   }).catch( next );
 });
 
-paymentMethodSchema.post('remove', function ( doc ) {
-  btPaymentMethod.remove( doc ).then(function ( doc ) {
+paymentMethodSchema.pre('remove', function ( next ) {
+  btPaymentMethod.remove( this ).then(function ( doc ) {
     console.log('Removed pm from braintree');
-  }).catch(function ( err ) {
-    throw new Error( err );
-  });
+    next();
+  }).catch( next );
 });
 
 // Export

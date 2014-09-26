@@ -4,18 +4,19 @@
 
 var winston   = require('winston'),
     chalk     = require('chalk'),
-    Scheduler = require('../cron/scheduler'),
     _         = require('lodash');
 
 var globSync     = require('glob').sync,
-    initializers = globSync('../lib/initializers/**/*.js', { cwd: __dirname }).map(require);
+    initializers = globSync('./lib/initializers/**/*.js', { cwd: __dirname }).map(require);
 
 exports.init = function () {
 
+  winston.log('info', chalk.dim('Initializer :: Init'));
+
   if( initializers && _.isArray( initializers ) ) {
-
-    initializers.forEach(function ( initializer ) {
-
+    winston.log('info', chalk.dim('Initializer :: Loading server initializers...'));
+    initializers.forEach(function ( initializer, index ) {
+      winston.log('info', chalk.dim('Initializer :: Loading initalizer', index, 'of', initializers.length));
       initializer.init();
 
     });

@@ -13,11 +13,9 @@ exports.fetchAll = function (req, res, next) {
     query.creator = req.session.token_unsigned.user_id;
   }
 
-  console.log(req.session.token_unsigned);
+  console.log('Fetching apps...');
 
   App.find(query).populate('plan paymentMethod').lean().exec(function (err, apps) {
-
-    console.log(apps[0]);
     if(err) {
       return respond.error.res( res, err, true );
     }
