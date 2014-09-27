@@ -11,6 +11,7 @@ var planSchema = new Schema({
   description: String,
   tagline:     String,
   title:       String,
+  maxRequests: Number,
   features:    Array
 });
 

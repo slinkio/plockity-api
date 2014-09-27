@@ -149,6 +149,7 @@ exports.update = function (req, res, next) {
     app.plan = app_data.plan || app.plan;
     app.paymentMethod = app_data.paymentMethod || app.paymentMethod;
     app.domain = app_data.domain || app.domain;
+    app.usingDefault = app_data.usingDefault;
 
     app.save(function (err, record) {
       if (err) {
