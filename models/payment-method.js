@@ -6,7 +6,8 @@ var mongoose   = require('mongoose'),
     Schema     = mongoose.Schema,
     momentDate = require('../utils/moment-date');
 
-var btPaymentMethod = require('../lib/braintree/payment-method');
+var btPaymentMethod = require('../lib/braintree/payment-method'),
+    subscription    = require('../lib/braintree/subscription');
 
 var paymentMethodSchema = new Schema({
   name:      String,
@@ -39,15 +40,23 @@ var paymentMethodSchema = new Schema({
 */
 
 paymentMethodSchema.pre('save', function ( next ) {
-  btPaymentMethod.remove( this ).then(function ( paymentMethod ) {
-    btPaymentMethod.save( paymentMethod ).then(function ( paymentMethod ) {
-
-      console.log('saved paymentmethod in braintree');
-
-      next.call( paymentMethod );
-
-    }).catch( next );
+  if( !this.isNew ) {
+    return next();
+  }
+  console.log('saving in bt');
+  btPaymentMethod.save( this ).then(function ( paymentMethod ) {
+    console.log('saved paymentmethod in braintree');
+    next.call( paymentMethod );
   }).catch( next );
+});
+
+paymentMethodSchema.pre('save', function ( next ) {
+  if( this.isDefault && this.token ) {
+    console.log('subscribing defaults');
+    btPaymentMethod.setDefault( this ).then( subscription.subscribeDefault ).then( function ( /* apps */ ) {
+      next();
+    }).catch( next );
+  }
 });
 
 paymentMethodSchema.pre('remove', function ( next ) {
