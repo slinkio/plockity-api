@@ -11,7 +11,7 @@ function authExpiration () {
 
 exports.checkAuthorization = function (req, res, next) {
   // Grab the app_key from the request
-  var key = req.header('app-key');
+  var key = req.header('App-Key');
 
   // If there is no key, we send a 401 Unauthorized.
   if(!key) {
@@ -22,7 +22,7 @@ exports.checkAuthorization = function (req, res, next) {
   }
   
   // Search for the app_key in our database
-  App.findById(id, function (err, app) {
+  App.find({ 'signatures.publicKey': key }, function (err, app) {
     if(err) {
       return res.status(500).json({
         status: 'error',
@@ -85,7 +85,7 @@ exports.checkAuthorization = function (req, res, next) {
       next();
     });
   });
-}
+};
 
 exports.sendGenerateToken = function (req, res, next) {
   // If we already have a stored authorization, use it. If not, create a new authorization.
@@ -107,4 +107,4 @@ exports.sendGenerateToken = function (req, res, next) {
     token: jwt.encode( req.app, authorization.session_key ),
     expires: authorization.expires
   });
-}
+};

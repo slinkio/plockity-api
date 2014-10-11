@@ -2,9 +2,10 @@
   App - Server Data Model
 */
 
-var mongoose =   require('mongoose'),
-    Schema =     mongoose.Schema,
-    momentDate = require('../utils/moment-date');
+var mongoose = require('mongoose'),
+    Schema   = mongoose.Schema,
+    jwt      = require('jwt-simple'),
+    keygen   = require('keygenerator');
 
 var appSchema = new Schema({
   name:      String,
@@ -20,7 +21,23 @@ var appSchema = new Schema({
   active:         Boolean,
   requests:       Number,
 
-  time_stamp: { type: String, default: momentDate() }
+  signatures: {
+    publicKey:  String,
+    privateKey: String
+  },
+
+  time_stamp: { type: Date, default: Date.now() }
+});
+
+appSchema.pre('save', function ( next ) {
+  if( !this.isNew ) {
+    return next();
+  }
+
+  this.privateKey = keygen._();
+  this.publicKey  = jwt.encode( this._id.toString(), this.privateKey );
+
+  next();
 });
 
 module.exports = mongoose.model('App', appSchema);
