@@ -51,11 +51,19 @@ paymentMethodSchema.pre('save', function ( next ) {
 });
 
 paymentMethodSchema.pre('save', function ( next ) {
+  console.log('isDefault?', this.isDefault);
   if( this.isDefault && this.token ) {
     console.log('subscribing defaults');
-    btPaymentMethod.setDefault( this ).then( subscription.subscribeDefault ).then( function ( /* apps */ ) {
-      next();
+    var doc = this;
+    btPaymentMethod.setDefault( this ).then(function ( /* res */ ) {
+      return subscription.subscribeDefault( doc );
+    }).then( function ( /* apps */ ) {
+      console.log(doc);
+      console.log('finishing up');
+      next.call( doc );
     }).catch( next );
+  } else {
+    next();
   }
 });
 
