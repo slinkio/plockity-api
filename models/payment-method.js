@@ -51,7 +51,6 @@ paymentMethodSchema.pre('save', function ( next ) {
 });
 
 paymentMethodSchema.pre('save', function ( next ) {
-  console.log('isDefault?', this.isDefault);
   if( this.isDefault && this.token ) {
     console.log('subscribing defaults');
     var doc = this;
