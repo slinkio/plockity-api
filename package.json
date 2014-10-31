@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "chai": "^1.9.2",
-    "mocha": "^2.0.1"
+    "mocha": "^2.0.1",
+    "single-line-log": "^0.4.1"
   }
 }

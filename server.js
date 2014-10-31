@@ -19,8 +19,8 @@ exports.init = function (app) {
 
   winston.info("Getting routes...");
 
-  routes.forEach(function(route) {
-    route(app);
+  routes.forEach(function( route ) {
+    route( app );
   });
 
   winston.info('Setting server options...');
