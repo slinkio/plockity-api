@@ -54,15 +54,21 @@ paymentMethodSchema.pre('save', function ( next ) {
   if( this.isDefault && this.token ) {
     console.log('subscribing defaults');
     var doc = this;
-    btPaymentMethod.setDefault( this ).then(function ( /* res */ ) {
-      return subscription.subscribeDefault( doc );
-    }).then( function ( /* apps */ ) {
+    btPaymentMethod.setDefault( this ).then( function ( /* res */ ) {
       console.log(doc);
       console.log('finishing up');
       next.call( doc );
     }).catch( next );
   } else {
     next();
+  }
+});
+
+paymentMethodSchema.post('save', function ( doc ) {
+  if( doc.isDefault && doc.token ) {
+    return subscription.subscribeDefault( doc ).then(function () {
+      console.log('subscribed defaults.');
+    });
   }
 });
 
