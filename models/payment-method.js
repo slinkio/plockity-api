@@ -79,5 +79,28 @@ paymentMethodSchema.pre('remove', function ( next ) {
   }).catch( next );
 });
 
+paymentMethodSchema.pre('remove', function ( next ) {
+  // Reassign new default
+  if( this.isDefault === true ) {
+    this.constructor.findOne({ customerId: this.customerId }, function ( err, paymentMethod ) {
+      if( err ) {
+        return next( err );
+      }
+
+      if( !paymentMethod ) {
+        return next();
+      }
+
+      paymentMethod.isDefault = true;
+
+      paymentMethod.save(function ( err, newDefault ) {
+        next( err );
+      });
+    });
+  } else {
+    next();
+  }
+});
+
 // Export
 module.exports = mongoose.model('PaymentMethod', paymentMethodSchema);
