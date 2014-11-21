@@ -19,19 +19,17 @@ exports.insert = function ( req, res, next ) {
       return respond.error.res( res, error );
     }
 
-      var data = {
-        // TODO: Construct document model w/ options considered
-      };
+    // TODO: Implement fieldConstructor
 
-      var doc = new VaultDocument( data );
+    var doc = new VaultDocument( data );
 
-      doc.save(function ( err, record ) {
-        if( err ) {
-          return respond.error.res( res, err, true );
-        }
+    doc.save(function ( err, record ) {
+      if( err ) {
+        return respond.error.res( res, err, true );
+      }
 
-        res.send( record );
-      });
+      res.send( record );
+    });
   });
 };
 
