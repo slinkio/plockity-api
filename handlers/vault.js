@@ -2,14 +2,21 @@ var App       = require('../models/app'),
     winston   = require('winston'),
     bcp       = require('bcrypt'),
     respond   = require('./response'),
-    normalize = require('../config/data-normalization');
+    normalize = require('../config/data-normalization'),
+    fields    = require('../lib/vault/field-constructor');
 
 var VaultDocument = require('../models/vault-document');
 
 exports.insert = function ( req, res, next ) {
-  var auth = req.auth;
+  var auth    = req.authorization,
+      dataKey = req.body.dataKey,
+      payload = req.parsedPayload;
 
-  VaultDocument.findOne({ app: auth.app, key: req.dataKey }, function ( err, existingDocument ) {
+  if( !req.body.dataKey ) {
+    return respond.error.res(res, 'Missing dataKey in request body');
+  }
+
+  VaultDocument.findOne({ app: auth.app._id, dataKey: req.body.dataKey }, function ( err, existingDocument ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
@@ -19,22 +26,30 @@ exports.insert = function ( req, res, next ) {
       return respond.error.res( res, error );
     }
 
-    // TODO: Implement fieldConstructor
+    var options = req.body.options || {};
 
-    var doc = new VaultDocument( data );
+    fields.construct( payload, options ).then(function ( constructed ) {
+      var data = {
+        data:    constructed,
+        dataKey: dataKey,
+        app:     auth.app._id
+      };
 
-    doc.save(function ( err, record ) {
-      if( err ) {
-        return respond.error.res( res, err, true );
-      }
+      var doc = new VaultDocument( data );
 
-      res.send( record );
+      doc.save(function ( err, record ) {
+        if( err ) {
+          return respond.error.res( res, err, true );
+        }
+
+        res.status(200);
+      });
     });
   });
 };
 
 exports.update = function ( req, res, next ) {
-  var auth = req.auth;
+  var auth = req.authorization;
 
   var update = {
     $set: {
@@ -42,7 +57,7 @@ exports.update = function ( req, res, next ) {
     }
   };
 
-  VaultDocument.findOneAndUpdate({ app: auth.app, key: req.dataKey }, update, function ( err, updated ) {
+  VaultDocument.findOneAndUpdate({ app: auth.app._id, dataKey: req.dataKey }, update, function ( err, updated ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
@@ -52,9 +67,9 @@ exports.update = function ( req, res, next ) {
 };
 
 exports.delete = function ( req, res, next ) {
-  var auth = req.auth;
+  var auth = req.authorization;
 
-  VaultDocument.findOneAndRemove({ app: auth.app, key: req.dataKey }, function ( err, result ) {
+  VaultDocument.findOneAndRemove({ app: auth.app._id, dataKey: req.dataKey }, function ( err, result ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
@@ -68,13 +83,22 @@ exports.compare = function ( req, res, next ) {
 };
 
 exports.raw = function ( req, res, next ) {
-  var auth = req.auth;
+  var auth = req.authorization;
 
-  VaultDocument.findOne({ app: auth.app, key: req.dataKey }, function ( err, record ) {
+  VaultDocument.findOne({ app: auth.app._id, dataKey: req.dataKey }, function ( err, record ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
-    // TODO: Strip system fields
-    res.send( record );
+
+    if( !record ) {
+      return respond.code.notfound( res );
+    }
+
+    var returnRecord = {
+      key: record.dataKey,
+      data: fields.hydrate( record.data )
+    };
+
+    res.send( returnRecord );
   });
 };

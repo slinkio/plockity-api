@@ -6,14 +6,16 @@ var mongoose = require('mongoose'),
     Schema   = mongoose.Schema;
 
 var fieldSchema = new Schema({
-  encrypt: { type: Boolean, default: true },
-  path:    String,
-  value:   String
+  encrypted: { type: Boolean, default: false },
+  encrypt:   { type: Boolean, default: true },
+  path:      String,
+  value:     String
 });
 
 var vaultDocSchema = new Schema({
   data:       [ fieldSchema ],
   app:        { type: Schema.ObjectId, ref: 'App' },
+  dataKey:    { type: String, index: true },
   time_stamp: { type: Date, default: Date.now() }
 });
 
@@ -37,7 +39,7 @@ vaultDocSchema.pre('save', function ( next ) {
       var encryptionRounds = app.plan.encryptionRounds || 10;
 
       Promise.map(self.data, function ( field ) {
-        if( !field.encrypt || !_.isString(field.value) ) {
+        if( !field.encrypt || !_.isString(field.value) || field.encrypted ) {
           return field;
         }
 

@@ -20,7 +20,7 @@ exports.error = {
   log: function (err) {
     logger.log('error', err);
   }
-}
+};
 
 exports.code = {
   unauthorized: function (res, msg) {
@@ -42,4 +42,4 @@ exports.code = {
       res.send(200);
     }
   }
-}
+};

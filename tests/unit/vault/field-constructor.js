@@ -9,7 +9,7 @@ var fieldConstructor = require(cwd + '/lib/vault/field-constructor');
 describe('Vault :: Field Object Constructor', function () {
 
   it('should handle basic objects with no options', function ( done ) {
-    fieldConstructor({
+    fieldConstructor.construct({
       test:  'data',
       test2: 'otherdata'
     }).then(function ( fields ) {
@@ -31,7 +31,7 @@ describe('Vault :: Field Object Constructor', function () {
       disableEncryption: [ 'test2' ]
     };
 
-    fieldConstructor({
+    fieldConstructor.construct({
       test:  'data',
       test2: 'otherdata'
     }, options).then(function ( fields ) {
@@ -49,7 +49,7 @@ describe('Vault :: Field Object Constructor', function () {
   });
 
   it('should handle multi-level objects with no options', function ( done ) {
-    fieldConstructor({
+    fieldConstructor.construct({
       test:  'data',
       nested: {
         data: 'here',
@@ -85,7 +85,7 @@ describe('Vault :: Field Object Constructor', function () {
       disableEncryption: [ 'test', 'nested.data', 'nested.evenmore.array' ]
     };
 
-    fieldConstructor({
+    fieldConstructor.construct({
       test:  'data',
       nested: {
         data: 'here',
@@ -113,6 +113,23 @@ describe('Vault :: Field Object Constructor', function () {
       expect( fields[3].path ).to.equal('nested.evenmore.array.0');
       expect( fields[3].encrypt ).to.equal(false);
       expect( fields[3].value ).to.equal('test');
+
+      done();
+    });
+  });
+
+  it('should rehydrate returned structure', function ( done ) {
+    fieldConstructor.construct({
+      test: 'data',
+      test2: {
+        test: 'data2'
+      }
+    }).then(function ( fields ) {
+      var ret = fieldConstructor.hydrate( fields );
+
+      expect(ret).to.be.an('object');
+      expect(ret.test).to.equal('data');
+      expect(ret.test2.test).to.equal('data2');
 
       done();
     });
