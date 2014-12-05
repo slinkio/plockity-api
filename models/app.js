@@ -27,13 +27,17 @@ var appSchema = new Schema({
   domain:         String,
   active:         Boolean,
   requests:       [ requestSchema ],
-  requestsNumber: Number,
+  requestsMade:   Number,
 
   apiKey:  String,
 
   time_stamp: { type: Date, default: Date.now() }
 });
 
+/**
+ * API key generation
+ * @middleware
+ */
 appSchema.pre('save', function ( next ) {
   if( !this.isNew ) {
     return next();
@@ -44,6 +48,10 @@ appSchema.pre('save', function ( next ) {
   next();
 });
 
+/**
+ * Handles subscriptions
+ * @middleware
+ */
 appSchema.pre('save', function ( next ) {
   var args = [ this ],
       self = this,
@@ -78,7 +86,10 @@ appSchema.pre('save', function ( next ) {
     });
   });
 });
-
+/**
+ * Cancels the subscription before deletion
+ * @middleware
+ */
 appSchema.pre('remove', function ( next ) {
   if( this.subscriptionId && this.paymentMethod ) {
     subscription.cancel(this.subscriptionId).then(function ( /* result */ ) {
@@ -87,6 +98,11 @@ appSchema.pre('remove', function ( next ) {
   }
 });
 
+/**
+ * Generate new API Key
+ * @method
+ * @return {Object} App w/ new key
+ */
 appSchema.methods.newApiKey = function () {
   var app = this;
 
@@ -99,6 +115,28 @@ appSchema.methods.newApiKey = function () {
       }
 
       resolve( record );
+    });
+  });
+};
+
+/**
+ * Mark a request - increments requestsMade and pushes a new request
+ * @method
+ * @return {Object} App w/ new request
+ */
+appSchema.methods.markRequest = function () {
+  var app = this;
+
+  return new Promise(function ( resolve, reject ) {
+    app.requests.push({});
+    app.requestsMade = app.requestsMade + 1;
+
+    app.save(function ( err, app ) {
+      if( err ) {
+        reject( err );
+      } else {
+        resolve( app );
+      }
     });
   });
 };

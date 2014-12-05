@@ -1,9 +1,16 @@
 var express = require('express'),
-    auth    = require('../handlers/authorize'),
     vault   = require('../handlers/vault');
+
+var authMiddleware         = require('../lib/middleware/app-auth'),
+    subscriptionMiddleware = require('../lib/middleware/subscription'),
+    payloadParser          = require('../lib/middleware/payload-parser');
 
 module.exports = function ( app ) {
   var vaultRouter = express.Router();
+
+  vaultRouter.use( authMiddleware(true) );
+  vaultRouter.use( subscriptionMiddleware );
+  vaultRouter.use( payloadParser('payload') );
 
   vaultRouter.post('/', vault.insert);
   vaultRouter.put('/', vault.update);
