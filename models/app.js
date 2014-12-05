@@ -23,15 +23,15 @@ var appSchema = new Schema({
   active:         Boolean,
   requests:       Number,
 
-  signatures: {
+  /*signatures: {
     publicKey:  String,
     privateKey: String
-  },
+  },*/
 
   time_stamp: { type: Date, default: Date.now() }
 });
 
-appSchema.pre('save', function ( next ) {
+/*appSchema.pre('save', function ( next ) {
   if( !this.isNew ) {
     return next();
   }
@@ -40,7 +40,7 @@ appSchema.pre('save', function ( next ) {
   this.publicKey  = jwt.encode( this._id.toString(), this.privateKey );
 
   next();
-});
+});*/
 
 appSchema.pre('save', function ( next ) {
   var args = [ this ],
