@@ -5,9 +5,14 @@
 var mongoose = require('mongoose'),
     Schema   = mongoose.Schema,
     jwt      = require('jwt-simple'),
-    keygen   = require('keygenerator');
+    keygen   = require('keygenerator'),
+    Promise  = require('bluebird'); // jshint ignore:line
 
 var subscription = require('../lib/braintree/subscription');
+
+var requestSchema = new Schema({
+  time: { type: Date, default: Date.now() }
+}, { _id: false });
 
 var appSchema = new Schema({
   name:      String,
@@ -21,26 +26,23 @@ var appSchema = new Schema({
   subscription:   Object,
   domain:         String,
   active:         Boolean,
-  requests:       Number,
+  requests:       [ requestSchema ],
+  requestsNumber: Number,
 
-  /*signatures: {
-    publicKey:  String,
-    privateKey: String
-  },*/
+  apiKey:  String,
 
   time_stamp: { type: Date, default: Date.now() }
 });
 
-/*appSchema.pre('save', function ( next ) {
+appSchema.pre('save', function ( next ) {
   if( !this.isNew ) {
     return next();
   }
 
-  this.privateKey = keygen._();
-  this.publicKey  = jwt.encode( this._id.toString(), this.privateKey );
+  this.apiKey = keygen._();
 
   next();
-});*/
+});
 
 appSchema.pre('save', function ( next ) {
   var args = [ this ],
@@ -84,5 +86,21 @@ appSchema.pre('remove', function ( next ) {
     }).catch( next );
   }
 });
+
+appSchema.methods.newApiKey = function () {
+  var app = this;
+
+  return new Promise(function ( resolve, reject ) {
+    app.apiKey = keygen._();
+
+    app.save(function ( err, record ) {
+      if( err ) {
+        return reject( err );
+      }
+
+      resolve( record );
+    });
+  });
+};
 
 module.exports = mongoose.model('App', appSchema);

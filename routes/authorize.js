@@ -4,7 +4,7 @@ var express          = require('express'),
 module.exports = function (app) {
   var authorizeRouter = express.Router();
 
-  authorizeRouter.get('/', authorizeHandler.checkAuthorization, authorizeHandler.sendGenerateToken);
+  authorizeRouter.get('/', authorizeHandler.auth);
   
   app.use('/api/authorize', authorizeRouter);
 };
