@@ -187,3 +187,29 @@ exports.del = function (req, res, next) {
     respond.code.ok(res);
   });
 };
+
+exports.resetKey = function ( req, res, next ) {
+  var id = req.params.id;
+
+  if(req.session.token_unsigned.type === 'user' && ( !req.session.user.app || req.session.user.app.indexOf(id) < 0 ) ) {
+    return respond.code.unauthorized(res);
+  }
+
+  App.findById(id, function ( err, app ) {
+    if( err ) {
+      throw err;
+    }
+
+    if( !app ) {
+      return res.status(404).send('We couldn\'t find an app with id:' + id);
+    }
+
+    app.newApiKey().then(function ( newApp ) {
+      res.status(200).send({
+        key: newApp.apiKey
+      });
+    }).catch(function ( err ) {
+      throw err;
+    });
+  });
+};

@@ -7,6 +7,7 @@ module.exports = function (app) {
 
   appsRouter.get('/', sessionHandler.authorize, appsHandler.fetchAll);
   appsRouter.get('/:id', sessionHandler.authorize, appsHandler.fetchByID);
+  appsRouter.get('/:id/reset-key', sessionHandler.authorize, appsHandler.resetKey);
 
   appsRouter.post('/', appsHandler.create);
 
