@@ -82,7 +82,7 @@ exports.create = function (req, res, next) {
   console.log(req.body.app);
   var app_data = req.body.app;
 
-  if(!app_data || !app_data.name || !app_data.domain || !app_data.plan || !app_data.creator) {
+  if(!app_data || !app_data.name || !app_data.url || !app_data.plan || !app_data.creator) {
     return res.status(500).json({
       status: 'error',
       error: 'Missing information to complete request.'
@@ -97,10 +97,7 @@ exports.create = function (req, res, next) {
 
   app.save(function (err, record) {
     if(err) {
-      return res.status(500).json({
-        status: 'error',
-        error: err
-      });
+      throw err;
     }
     console.log(record);
 
@@ -148,7 +145,7 @@ exports.update = function (req, res, next) {
     app.name = app_data.name || app.name;
     app.plan = app_data.plan || app.plan;
     app.paymentMethod = app_data.paymentMethod || app.paymentMethod;
-    app.domain = app_data.domain || app.domain;
+    app.url = app_data.url || app.url;
     app.usingDefault = app_data.usingDefault;
 
     app.save(function (err, record) {

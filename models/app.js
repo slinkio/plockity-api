@@ -24,14 +24,14 @@ var appSchema = new Schema({
   usingDefault:   { type: Boolean, default: true },
   subscriptionId: String,
   subscription:   Object,
-  domain:         String,
+  url:            String,
   active:         Boolean,
   requests:       [ requestSchema ],
-  requestsMade:   Number,
+  requestsMade:   { type: Number, default: 0 },
 
   apiKey:  String,
 
-  time_stamp: { type: Date, default: Date.now() }
+  time_stamp: { type: Date, default: Date.now }
 });
 
 /**
@@ -69,7 +69,7 @@ appSchema.pre('save', function ( next ) {
         return next.call( self );
       }
 
-      if( newDoc.plan.price <= 0 ) {
+      if( newDoc.plan.price <= 0 && !self.isNew ) {
         subscription.cancel( newDoc.subscriptionId ).then(function ( result ) {
           self.subscriptionId = self.subscription = self.paymentMethod = undefined;
           next.call( self );
