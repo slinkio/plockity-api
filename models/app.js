@@ -43,7 +43,9 @@ appSchema.pre('save', function ( next ) {
     return next();
   }
 
-  this.apiKey = keygen._();
+  this.apiKey = keygen._({
+    length: 128
+  });
 
   next();
 });
@@ -65,7 +67,7 @@ appSchema.pre('save', function ( next ) {
 
        // Only continue if there isn't an oldDoc or if the paymentMethod or plan doesn't equal
        // what we already have ( the only time we need to trigger a resubcribe call )
-      if( oldDoc && oldDoc.paymentMethod === self.paymentMethod && oldDoc.plan._id === newDoc.plan._id ) {
+      if( oldDoc && oldDoc.paymentMethod === self.paymentMethod && oldDoc.plan._id.toString() === newDoc.plan._id.toString() ) {
         return next.call( self );
       }
 
@@ -107,7 +109,9 @@ appSchema.methods.newApiKey = function () {
   var app = this;
 
   return new Promise(function ( resolve, reject ) {
-    app.apiKey = keygen._();
+    app.apiKey = keygen._({
+      length: 128
+    });
 
     app.save(function ( err, record ) {
       if( err ) {
