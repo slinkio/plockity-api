@@ -9,26 +9,33 @@ var VaultDocument = require('../models/vault-document');
 
 exports.insert = function ( req, res, next ) {
   var auth    = req.authorization,
-      dataKey = req.body.dataKey,
       payload = req.parsedPayload;
 
-  if( !req.body.dataKey ) {
-    return respond.error.res(res, 'Missing dataKey in request body');
+  if( !payload ) {
+    return respond.error.res(res, 'Please provide your payload in a JSON object prefixed with "payload".');
   }
 
-  VaultDocument.findOne({ app: auth.app._id, dataKey: req.body.dataKey }, function ( err, existingDocument ) {
+  var rdoc    = payload.document,
+      dataKey = payload.dataKey;
+
+  if( !dataKey ) {
+    return respond.error.res(res, 'Missing dataKey in payload');
+  } else if( !rdoc ) {
+    return respond.error.res(res, 'Missing document in payload');
+  }
+
+  VaultDocument.findOne({ app: auth.app._id, dataKey: dataKey }, function ( err, existingDocument ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
 
-    if( existingDocument ) {
-      var error = new Error('Document with key ' + req.dataKey + ' already exists.');
-      return respond.error.res( res, error );
+    if( !!existingDocument ) {
+      return respond.error.res(res, 'Document with key "' + dataKey + '"" already exists.');
     }
 
     var options = req.body.options || {};
 
-    fields.construct( payload, options ).then(function ( constructed ) {
+    fields.construct( rdoc, options ).then(function ( constructed ) {
       var data = {
         data:    constructed,
         dataKey: dataKey,
@@ -42,7 +49,7 @@ exports.insert = function ( req, res, next ) {
           return respond.error.res( res, err, true );
         }
 
-        res.status(200);
+        res.status(201).end();
       });
     });
   });

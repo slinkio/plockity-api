@@ -38,6 +38,8 @@
   },
   "devDependencies": {
     "chai": "^1.9.2",
+    "chai-as-promised": "^4.1.1",
+    "chai-http": "^1.0.0",
     "mocha": "^2.0.1",
     "single-line-log": "^0.4.1"
   }

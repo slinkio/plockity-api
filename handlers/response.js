@@ -5,19 +5,17 @@
 var logger = require('winston');
 
 exports.error = {
-  res: function (res, err, thr) {
-    logger.log('error', err);
-
-    res.status(500).json({
-      status: 'error',
-      error: err
-    });
+  res: function ( res, err, thr ) {
+    logger.log('debug', err);
     
-    if(thr) {
+    if( thr ) {
+      res.status(500).send( err );
       throw new Error(err);
+    } else {
+      res.status(400).send( err );
     }
   },
-  log: function (err) {
+  log: function ( err ) {
     logger.log('error', err);
   }
 };
