@@ -67,7 +67,7 @@ appSchema.pre('save', function ( next ) {
 
        // Only continue if there isn't an oldDoc or if the paymentMethod or plan doesn't equal
        // what we already have ( the only time we need to trigger a resubcribe call )
-      if( oldDoc && oldDoc.paymentMethod === self.paymentMethod && oldDoc.plan._id.toString() === newDoc.plan._id.toString() ) {
+      if( ( oldDoc && oldDoc.paymentMethod === self.paymentMethod && oldDoc.plan._id.toString() === newDoc.plan._id.toString() ) || !newDoc.plan || newDoc.plan.price <= 0 && self.isNew ) {
         return next.call( self );
       }
 

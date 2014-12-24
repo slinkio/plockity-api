@@ -55,6 +55,7 @@ vaultDocSchema.pre('save', function ( next ) {
               }
 
               field.value = hash;
+              field.encrypted = true;
               resolve( field );
             });
           });
