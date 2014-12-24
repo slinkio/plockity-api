@@ -1,11 +1,12 @@
 var moment        = require('moment'),
     jwt           = require('jwt-simple'),
+    respond       = require('./response'),
     App           = require('../models/app'),
     Authorization = require('../models/authorization'),
     _             = require('lodash');
 
 exports.auth = function ( req, res, next ) {
-  var payload = req.body;
+  var payload = req.query;
 
   if( !payload.apiKey ) {
     return respond.error.res( res, 'Please provide an api key in your request' );

@@ -8,7 +8,8 @@ var mongoose =   require('mongoose'),
 
 var Promise     = require('bluebird'), // jshint ignore:line
     createModel = require('./helpers/create-model'),
-    tokenModule = require(process.cwd() + '/lib/auth/token');
+    tokenModule = require(process.cwd() + '/lib/auth/token'),
+    _           = require('lodash');
 
 expirationGen = tokenModule.expirationGenerator(2, 'hours');
 

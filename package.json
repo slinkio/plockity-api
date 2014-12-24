@@ -1,6 +1,6 @@
 {
   "name": "plockity-api",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Plockity API Server",
   "main": "index.js",
   "scripts": {
