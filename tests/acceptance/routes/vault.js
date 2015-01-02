@@ -53,7 +53,7 @@ describe('Route :: Vault', function () {
   });
 
   describe('Endpoints', function () {
-    var _authorization, _rootAuth;
+    var _authorization, _rootAuth, _plockityApp;
 
     /* Test support */
     before(function ( done ) {
@@ -75,6 +75,8 @@ describe('Route :: Vault', function () {
 
         appDoc.save(function ( err, savedApp ) {
           if( err ) throw err;
+
+          _plockityApp = savedApp;
 
           var authorizationData = {
             app: savedApp._id.toString()
@@ -200,10 +202,63 @@ describe('Route :: Vault', function () {
       // TODO: Test options
     });
   
-    // TODO: Test GET
+    describe('GET', function () {
+      describe('raw', function () {
+        // TODO: Test getRaw api
+      });
+
+      describe('compare', function () {
+        // TODO: Test compare api
+      });
+    });
 
     // TODO: Test PUT
 
-    // TODO: Test DELETE
+    describe('DELETE', function () {
+      it('should 404 requests w/o dataKey in url', function ( done ) {
+        chai.request(app)
+          .delete('/api/vault/')
+          .set('X-App-Authorization', _authorization)
+          .then(function ( res ) {
+            expect(res).to.have.status(404);
+            done();
+          });
+      });
+
+      it('should 404 requests w/ not found data keys', function ( done ) {
+        chai.request(app)
+          .delete('/api/vault/123notfound')
+          .set('X-App-Authorization', _authorization)
+          .then(function ( res ) {
+            expect(res).to.have.status(404);
+            done();
+          });
+      });
+
+      it('should delete vault documents', function ( done ) {
+        var testDoc = new VaultDocument({
+          dataKey: 'test123',
+          app:     _plockityApp._id
+        });
+
+        testDoc.save(function ( err, doc ) {
+          if( err ) throw err;
+
+          chai.request(app)
+            .delete('/api/vault/' + doc.dataKey)
+            .set('X-App-Authorization', _authorization)
+            .then(function ( res ) {
+              expect(res).to.have.status(200);
+
+              VaultDocument.findById(doc._id.toString(), function ( err, documentExists ) {
+                if( err ) throw err;
+
+                expect(!!documentExists).to.equal(false);
+                done();
+              });
+            });
+        });
+      });
+    });
   });
 });

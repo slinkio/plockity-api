@@ -76,12 +76,16 @@ exports.update = function ( req, res, next ) {
 exports.delete = function ( req, res, next ) {
   var auth = req.authorization;
 
-  VaultDocument.findOneAndRemove({ app: auth.app._id, dataKey: req.dataKey }, function ( err, result ) {
+  VaultDocument.findOneAndRemove({ app: auth.app._id, dataKey: req.params.dataKey }, function ( err, result ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
 
-    res.send( result );
+    if( !result ) {
+      res.status(404).send('That document was not found');
+    } else {
+      res.send( result );
+    }
   });
 };
 

@@ -13,11 +13,11 @@ module.exports = function ( app ) {
   vaultRouter.use( payloadParser('payload') );
 
   vaultRouter.post('/', vault.insert);
-  vaultRouter.put('/', vault.update);
-  vaultRouter.delete('/', vault.delete);
+  vaultRouter.put('/:dataKey', vault.update);
+  vaultRouter.delete('/:dataKey', vault.delete);
 
-  vaultRouter.get('/compare/', vault.compare);
-  vaultRouter.get('/raw', vault.raw);
+  vaultRouter.get('/compare/:dataKey', vault.compare);
+  vaultRouter.get('/raw/:dataKey', vault.raw);
 
   app.use('/api/vault', vaultRouter);
 };
