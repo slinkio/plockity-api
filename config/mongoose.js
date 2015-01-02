@@ -10,7 +10,7 @@ var connection;
 
 exports.init = function ( db, address, singleton ) {
   // Defaults
-  db      = ( process.env.environment === 'plockity' ) ? 'plockitytest' : ( db ) ? db : 'plockity';
+  db      = ( process.env.environment === 'test' ) ? 'plockitytest' : ( db ) ? db : 'plockity';
   address = address || 'localhost';
 
   if( !connection && !singleton ) {
