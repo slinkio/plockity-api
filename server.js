@@ -8,18 +8,22 @@ var bodyParser = require('body-parser'),
 require('./config/mongoose').init();
 
 exports.init = function (app) {
-
   winston.info("Setting up middleware...");
-  app.use( morgan('dev') );
-  app.use( bodyParser.json() );
 
+  var logRoute = ( process.env.environment === 'test' ) ? process.env.verboseLogging : true;
+
+  if( logRoute ) {
+    app.use( morgan('dev') );
+  }
+
+  app.use( bodyParser.json() );
   app.use( bodyParser.urlencoded({
     extended: true
   }) );
 
   winston.info("Getting routes...");
 
-  routes.forEach(function( route ) {
+  routes.forEach(function ( route ) {
     route( app );
   });
 

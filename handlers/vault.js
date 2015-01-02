@@ -2,6 +2,8 @@ var App       = require('../models/app'),
     winston   = require('winston'),
     bcp       = require('bcrypt'),
     respond   = require('./response'),
+    _         = require('lodash'),
+    Promise   = require('bluebird'), // jshint ignore: line
     normalize = require('../config/data-normalization'),
     fields    = require('../lib/vault/field-constructor');
 
@@ -74,15 +76,16 @@ exports.update = function ( req, res, next ) {
 };
 
 exports.delete = function ( req, res, next ) {
-  var auth = req.authorization;
+  var auth    = req.authorization,
+      dataKey = req.params.dataKey;
 
-  VaultDocument.findOneAndRemove({ app: auth.app._id, dataKey: req.params.dataKey }, function ( err, result ) {
+  VaultDocument.findOneAndRemove({ app: auth.app._id, dataKey: dataKey }, function ( err, result ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
 
     if( !result ) {
-      res.status(404).send('That document was not found');
+      res.status(404).send('No document found for ' + dataKey);
     } else {
       res.send( result );
     }
@@ -90,13 +93,71 @@ exports.delete = function ( req, res, next ) {
 };
 
 exports.compare = function ( req, res, next ) {
-  // TODO: Write compare api
+  var auth    = req.authorization,
+      dataKey = req.params.dataKey,
+      payload = req.parsedPayload;
+
+  if( !payload ) {
+    return respond.error.res(res, 'Please include comparisons in your payload');
+  }
+
+  VaultDocument.findOne({ app: auth.app._id, dataKey: dataKey }, function ( err, record ) {
+    if( err ) {
+      return respond.error.res(res, err, true);
+    }
+
+    if( !record ) {
+      return res.status(404).send('No document found for ' + dataKey);
+    }
+
+    fields.construct(payload).then(function ( comparisons ) {
+      var fieldData = record.data;
+      var results = comparisons.map(function ( comparison ) {
+        return new Promise(function ( resolve, reject ) {
+          if( !comparison || !comparison.path ) {
+            return resolve({
+              value: comparison.value
+            });
+          }
+
+          var comparisonValue      = comparison.value,
+              fieldIndexInDocument = _.findIndex(fieldData, { path: comparison.path }),
+              dataToCompare        = ( fieldIndexInDocument !== undefined ) ? fieldData[ fieldIndexInDocument ] : { path: comparison.path, value: undefined },
+              compareResult;
+
+          var resolveResult = function ( bool ) {
+            resolve({
+              path:  comparison.path,
+              value: bool
+            });
+          };
+
+          if( dataToCompare.encrypted && !( dataToCompare.value === undefined || dataToCompare.value === null ) ) {
+            bcp.compare(comparison.value.toString(), dataToCompare.value, function ( err, bcpResult ) {
+              if( err ) throw err;
+              resolveResult(bcpResult);
+            });
+          } else {
+            resolveResult( dataToCompare.value === comparisonValue );
+          }
+        });
+      });
+
+      Promise.all(results).then(function ( result ) {
+        res.status(200).send(fields.hydrate(result));
+      }).catch(function ( err ) {
+        respond.error.res(res, err);
+      });
+    }).catch(function ( err ) {
+      respond.error.res(res, err);
+    });
+  });
 };
 
 exports.raw = function ( req, res, next ) {
   var auth = req.authorization;
 
-  VaultDocument.findOne({ app: auth.app._id, dataKey: req.dataKey }, function ( err, record ) {
+  VaultDocument.findOne({ app: auth.app._id, dataKey: req.params.dataKey }, function ( err, record ) {
     if( err ) {
       return respond.error.res( res, err, true );
     }
@@ -106,7 +167,7 @@ exports.raw = function ( req, res, next ) {
     }
 
     var returnRecord = {
-      key: record.dataKey,
+      key:  record.dataKey,
       data: fields.hydrate( record.data )
     };
 

@@ -92,7 +92,6 @@ describe('Route :: Vault', function () {
     });
 
     after(function ( done ) {
-      var mongoose = require('mongoose');
       mongoose.connection.db.dropDatabase(done);
     });
     /* ./ Test support */
@@ -203,12 +202,121 @@ describe('Route :: Vault', function () {
     });
   
     describe('GET', function () {
+      var _doc;
+
+      before(function ( done ) {
+        var fields = require(process.cwd() + '/lib/vault/field-constructor');
+        var dataForDoc = {
+          test: 'data',
+          nested: {
+            test: 'data2'
+          },
+          arrays: [ 'are', 'ok', 'too' ]
+        };
+
+        fields.construct(dataForDoc).then(function ( constructed ) {
+          var testDoc = new VaultDocument({
+            dataKey: 'test123',
+            data:    constructed,
+            app:     _plockityApp._id
+          });
+
+          testDoc.save(function ( err, doc ) {
+            if( err ) throw err;
+            _doc = doc;
+            done();
+          });
+        });
+      });
+
+      after(function ( done ) {
+        _doc.remove(function ( err ) {
+          if( err ) throw err;
+          done();
+        });
+      });
+
       describe('raw', function () {
-        // TODO: Test getRaw api
+        it('should 404 when no document is found', function ( done ) {
+          chai.request(app)
+            .get('/api/vault/raw/123notfound')
+            .set('X-App-Authorization', _authorization)
+            .then(function ( res ) {
+              expect(res).to.have.status(404);
+              done();
+            });
+        });
+
+        it('should get raw data', function ( done ) {
+          chai.request(app)
+            .get('/api/vault/raw/' + _doc.dataKey)
+            .set('X-App-Authorization', _authorization)
+            .then(function ( res ) {
+              expect(res).to.have.status(200);
+              expect(res.body.data).to.exist.and.to.have.property('test');
+              expect(res.body.data).to.have.property('arrays');
+              expect(res.body.key).to.equal(_doc.dataKey);
+              done();
+            });
+        });
       });
 
       describe('compare', function () {
-        // TODO: Test compare api
+        it('should reject requests w/o compare payload', function ( done ) {
+          chai.request(app)
+            .get('/api/vault/compare/123')
+            .set('X-App-Authorization', _authorization)
+            .then(function ( res ) {
+              expect(res).to.have.status(400);
+              expect(res.error.text.toLowerCase()).to.contain('comparisons').and.to.contain('payload');
+              done();
+            });
+        });
+
+        it('should 404 when no document is found', function ( done ) {
+          chai.request(app)
+            .get('/api/vault/compare/123notfound')
+            .set('X-App-Authorization', _authorization)
+            .send({
+              payload: {
+                test: 'data'
+              }
+            })
+            .then(function ( res ) {
+              expect(res).to.have.status(404);
+              done();
+            });
+        });
+
+        it('should return comparative data', function ( done ) {
+          chai.request(app)
+            .get('/api/vault/compare/' + _doc.dataKey)
+            .set('X-App-Authorization', _authorization)
+            .send({
+              payload: {
+                test: 'data',
+                nested: {
+                  test: 'wrong'
+                },
+                arrays: [ 'are', 'WRONG', 'too' ]
+              }
+            })
+            .then(function ( res ) {
+              expect(res).to.have.status(200);
+              expect(res.body).to.have.property('test').and.to.equal(true);
+              expect(res.body).to.have.property('nested').and.to.have.property('test').and.to.equal(false);
+              expect(res.body).to.have.property('arrays').and.be.an('array');
+              expect(res.body.arrays[0]).to.equal(true);
+              expect(res.body.arrays[1]).to.equal(false);
+              expect(res.body.arrays[2]).to.equal(true);
+
+              done();
+            });
+        });
+
+        // TODO: Test multiple types of comparative requests ->
+        // - Encrypted booleans
+        // - Undefined paths
       });
     });
 
