@@ -2,8 +2,9 @@
   Vault Document - Server Data Model
 */
 
-var mongoose = require('mongoose'),
-    Schema   = mongoose.Schema;
+var mongoose    = require('mongoose'),
+    Schema      = mongoose.Schema,
+    createModel = require('./helpers/create-model');
 
 var fieldSchema = new Schema({
   encrypted: { type: Boolean, default: false },
@@ -68,4 +69,4 @@ vaultDocSchema.pre('save', function ( next ) {
   });
 });
 
-module.exports = mongoose.model('VaultDocument', vaultDocSchema);
+module.exports = createModel('VaultDocument', vaultDocSchema);

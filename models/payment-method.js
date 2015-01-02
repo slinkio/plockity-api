@@ -2,9 +2,10 @@
   Payment Method - Server Data Model
 */
 
-var mongoose   = require('mongoose'),
-    Schema     = mongoose.Schema,
-    momentDate = require('../utils/moment-date');
+var mongoose    = require('mongoose'),
+    Schema      = mongoose.Schema,
+    createModel = require('./helpers/create-model'),
+    momentDate  = require('../utils/moment-date');
 
 var btPaymentMethod = require('../lib/braintree/payment-method'),
     subscription    = require('../lib/braintree/subscription');
@@ -103,4 +104,4 @@ paymentMethodSchema.pre('remove', function ( next ) {
 });
 
 // Export
-module.exports = mongoose.model('PaymentMethod', paymentMethodSchema);
+module.exports = createModel('PaymentMethod', paymentMethodSchema);

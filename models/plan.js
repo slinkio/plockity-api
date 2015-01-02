@@ -2,9 +2,10 @@
   Plan - Server Data Model
 */
 
-var mongoose =   require('mongoose'),
-    Schema =     mongoose.Schema,
-    momentDate = require('../utils/moment-date');
+var mongoose    = require('mongoose'),
+    Schema      = mongoose.Schema,
+    createModel = require('./helpers/create-model'),
+    momentDate  = require('../utils/moment-date');
 
 var planSchema = new Schema({
   price:       Number,
@@ -15,4 +16,4 @@ var planSchema = new Schema({
   features:    Array
 });
 
-module.exports = mongoose.model('Plan', planSchema);
+module.exports = createModel('Plan', planSchema);

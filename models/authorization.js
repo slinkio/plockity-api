@@ -2,9 +2,10 @@
   Authorization - Server Data Model
 */
 
-var mongoose =   require('mongoose'),
-    Schema =     mongoose.Schema,
-    momentDate = require('../utils/moment-date');
+var mongoose    = require('mongoose'),
+    Schema      = mongoose.Schema,
+    createModel = require('./helpers/create-model'),
+    momentDate  = require('../utils/moment-date');
 
 var Promise     = require('bluebird'), // jshint ignore:line
     createModel = require('./helpers/create-model'),

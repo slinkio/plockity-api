@@ -2,9 +2,10 @@
   User Session - Server Data Model
 */
 
-var mongoose =   require('mongoose'),
-    Schema =     mongoose.Schema,
-    momentDate = require('../utils/moment-date');
+var mongoose    = require('mongoose'),
+    Schema      = mongoose.Schema,
+    createModel = require('./helpers/create-model'),
+    momentDate  = require('../utils/moment-date');
 
 var sessionSchema = new Schema({
   user:        { type: Schema.Types.ObjectId, ref: 'User' },
@@ -14,4 +15,4 @@ var sessionSchema = new Schema({
   time_stamp:  { type: String, default: new momentDate() }
 });
 
-module.exports = mongoose.model('Session', sessionSchema);
+module.exports = createModel('Session', sessionSchema);

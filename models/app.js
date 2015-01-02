@@ -2,11 +2,12 @@
   App - Server Data Model
 */
 
-var mongoose = require('mongoose'),
-    Schema   = mongoose.Schema,
-    jwt      = require('jwt-simple'),
-    keygen   = require('keygenerator'),
-    Promise  = require('bluebird'); // jshint ignore:line
+var mongoose    = require('mongoose'),
+    Schema      = mongoose.Schema,
+    createModel = require('./helpers/create-model'),
+    jwt         = require('jwt-simple'),
+    keygen      = require('keygenerator'),
+    Promise     = require('bluebird'); // jshint ignore:line
 
 var subscription = require('../lib/braintree/subscription');
 
@@ -145,4 +146,4 @@ appSchema.methods.markRequest = function () {
   });
 };
 
-module.exports = mongoose.model('App', appSchema);
+module.exports = createModel('App', appSchema);

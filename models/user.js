@@ -2,9 +2,10 @@
   User - Server Data Model
 */
 
-var mongoose =   require('mongoose'),
-    Schema =     mongoose.Schema,
-    momentDate = require('../utils/moment-date');
+var mongoose    = require('mongoose'),
+    Schema      = mongoose.Schema,
+    createModel = require('./helpers/create-model'),
+    momentDate  = require('../utils/moment-date');
 
 var userSchema = new Schema({
   login: {
@@ -26,4 +27,4 @@ var userSchema = new Schema({
   time_stamp: { type: String, default: momentDate() }
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = createModel('User', userSchema);
