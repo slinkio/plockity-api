@@ -133,7 +133,7 @@ exports.compare = function ( req, res, next ) {
           };
 
           if( dataToCompare.encrypted && !( dataToCompare.value === undefined || dataToCompare.value === null ) ) {
-            bcp.compare(comparison.value.toString(), dataToCompare.value, function ( err, bcpResult ) {
+            bcp.compare(comparisonValue.toString(), dataToCompare.value, function ( err, bcpResult ) {
               if( err ) throw err;
               resolveResult(bcpResult);
             });
