@@ -24,6 +24,7 @@ var app           = require(cwd + '/server').init( require('express')() ),
     App           = require(cwd + '/models/app'),
     VaultDocument = require(cwd + '/models/vault-document'),
     Plan          = require(cwd + '/models/plan'),
+    bcp           = require('bcrypt'),
     mongoose      = require('mongoose');
 
 describe('Route :: Vault', function () {
@@ -320,7 +321,114 @@ describe('Route :: Vault', function () {
       });
     });
 
-    // TODO: Test PUT
+    describe('PUT', function () {
+      it('should 404 requests w/o dataKey in url', function ( done ) {
+        chai.request(app)
+          .put('/api/vault/')
+          .set('X-App-Authorization', _authorization)
+          .then(function ( res ) {
+            expect(res).to.have.status(404);
+            done();
+          });
+      });
+
+      it('should 400 requests w/ no payload', function ( done ) {
+        chai.request(app)
+          .put('/api/vault/123notfound')
+          .set('X-App-Authorization', _authorization)
+          .then(function ( res ) {
+            expect(res).to.have.status(400);
+            expect(res.error.text.toLowerCase()).to.contain('payload');
+            done();
+          });
+      });
+
+      it('should 404 requests w/ not found dataKey', function ( done ) {
+        chai.request(app)
+          .put('/api/vault/123notfound')
+          .set('X-App-Authorization', _authorization)
+          .send({
+            payload: { document: {} }
+          })
+          .then(function ( res ) {
+            expect(res).to.have.status(404);
+            done();
+          });
+      });
+
+      it('should update vault documents', function ( done ) {
+        var doc = {
+          dataKey: 'test012',
+          app:     _plockityApp._id,
+          data: [
+            {
+              path:  'test',
+              value: 'data'
+            },
+            {
+              path:  'test2',
+              value: 'data'
+            },
+            {
+              path:  'testArray.0',
+              value: 'arraytest'
+            },
+            {
+              path:  'testArray.1',
+              value: 'arraytest2'
+            },
+            {
+              path:  'testArray.2',
+              value: 'arraytest3'
+            }
+          ]
+        };
+
+        var testDoc = new VaultDocument(doc);
+
+        testDoc.save(function ( err, doc ) {
+          if( err ) throw err;
+
+          chai.request(app)
+            .put('/api/vault/' + doc.dataKey)
+            .set('X-App-Authorization', _authorization)
+            .send({
+              payload: {
+                document: {
+                  test:      'updatedData',
+                  testArray: [ 'arraytest', 'arraytestupdate' ],
+                  newField:  'test'
+                }
+              }
+            })
+            .then(function ( res ) {
+              expect(res).to.have.status(200);
+
+              VaultDocument.findById(doc._id.toString(), function ( err, vDoc ) {
+                if ( err ) throw err;
+
+                var pathMap = {
+                  test: 'updatedData',
+                  test2: 'data',
+                  'testArray.1': 'arraytestupdate',
+                  newField: 'test'
+                };
+
+                for ( var path in pathMap ) {
+                  expect(
+                    bcp.compareSync(
+                      pathMap[path],
+                      _.find(vDoc.data, { path: path }).value
+                    )
+                  ).to.equal(true);
+                }
+
+                done();
+              });
+            });
+        });
+      });
+    });
 
     describe('DELETE', function () {
       it('should 404 requests w/o dataKey in url', function ( done ) {

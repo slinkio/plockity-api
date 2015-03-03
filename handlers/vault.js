@@ -58,20 +58,48 @@ exports.insert = function ( req, res, next ) {
 };
 
 exports.update = function ( req, res, next ) {
-  var auth = req.authorization;
+  var auth    = req.authorization,
+      payload = req.parsedPayload,
+      dataKey = req.params.dataKey,
+      options = {};
 
-  var update = {
-    $set: {
-      // TODO: Construct update query ( only allow certain fields )
-    }
+  var _handleError = function ( err ) {
+    respond.error.res(res, err, this.thrw || false);
   };
 
-  VaultDocument.findOneAndUpdate({ app: auth.app._id, dataKey: req.dataKey }, update, function ( err, updated ) {
-    if( err ) {
-      return respond.error.res( res, err, true );
+  if ( !payload || !payload.document ) {
+    return res.status(400).send('Please provide a payload.document in your request');
+  }
+
+  VaultDocument.findOne({ app: auth.app._id, dataKey: dataKey }, function ( err, vaultDocument ) {
+    if ( err ) {
+      return _handleError(err);
     }
 
-    res.send( updated );
+    if ( !vaultDocument ) {
+      return res.status(404).send('Vault Document not found');
+    }
+
+    fields.construct( payload.document, options ).then(function ( constructed ) {
+      constructed.forEach(function ( field ) {
+        var foundFieldIndex = _.findIndex(vaultDocument.data, { path: field.path });
+
+        if ( foundFieldIndex > -1 ) {
+          vaultDocument.data[foundFieldIndex].value = field.value;
+          vaultDocument.data[foundFieldIndex].encrypted = false;
+        } else {
+          vaultDocument.data.push(field);
+        }
+      });
+
+      vaultDocument.save(function ( err, savedDocument ) {
+        if ( err ) {
+          return _handleError(err);
+        }
+
+        res.status(200).send(fields.hydrate(savedDocument.data));
+      });
+    }).catch(_handleError.bind({ thrw: true }));
   });
 };
 
