@@ -1,0 +1,36 @@
+[
+  {
+    "title": "Developer",
+    "tagline": "Try Plockity for free",
+    "description": "Free, low traffic option for developers to play with the Plockity interface",
+    "price": 0,
+    "maxRequests": 3000,
+    "features": [
+      "3K Requests",
+      "Free!"
+    ]
+  },
+  {
+    "title": "Startup",
+    "tagline": "Great for Startups",
+    "description": "Standard-grade encryption for higher traffic apps",
+    "price": 15,
+    "maxRequests": 500000,
+    "features": [
+      "500K Requests",
+      "Email Support"
+    ]
+  },
+  {
+    "title": "Enterprise",
+    "tagline": "Super Secure & Scalable",
+    "description": "Enterprise-grade encryption for higher traffic and high-security apps",
+    "price": 50,
+    "maxRequests": 1000000,
+    "features": [
+      "1M Requests",
+      "Priority Phone/Email Support",
+      "Enterprise Level Encryption"
+    ]
+  }
+]

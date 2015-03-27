@@ -5,34 +5,45 @@ var winston        = require('winston'),
     cluster        = require('cluster'),
     os             = require('os');
 
-winston.info('Starting server...');
+var logLevel = ( process.env.environment === 'development' || process.env.environment === 'dev' ) ? 'debug' : 'info';
 
-if( cluster.isMaster ) {
+winston.loggers.add('default', {
+  transports: [
+    new ( winston.transports.Console )({ level: logLevel })
+  ]
+});
+
+var port = process.env.port || 3000,
+    app  = require('./server');
+
+if ( cluster.isMaster ) {
+  var workers = [];
+
+  os.cpus().forEach(function ( cpu, cpuIndex ) {
+    function boot ( i ) {
+      workers[ i ] = cluster.fork();
+
+      workers[ i ].on('exit', function ( message ) {
+        winston.error(chalk.bgRed('Oh noes, a worker died. RIP Worker', i, '. Rebooting...'));
+        winston.error(chalk.bgRed(message));
+        boot(i);
+      });
+    }
+
+    boot( cpuIndex );
+  });
+
   initializers.init();
 
-  os.cpus().forEach(function ( cpu ) {
-    cluster.fork();
+  app.registerPlans().catch(function ( err ) {
+    winston.error(chalk.bgRed('Error registering plans.', err.stack));
   });
 } else {
   process.title = 'Plockity Worker - ' + cluster.worker.id + ' - Node.js';
 
-  var app = require('./server').init( express() );
+  var server = app.init( express() );
 
-  var port = process.env.PORT || 3000;
-
-  app.listen(port, function () {
+  server.listen(port, function () {
     winston.info('Worker [', cluster.worker.id, '] listening on port', port, '...');
   });
 }
-
-function withExit ( options ) {
-  mongooseConfig.cleanup();
-
-  if( options.exit ) {
-    process.exit();
-  }
-}
-
-process.on('exit', withExit.bind(null, { clean: true }));
-
-process.on('SIGINT', withExit.bind(null, { exit: true }));
