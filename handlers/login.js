@@ -10,7 +10,6 @@ exports.login = function (req, res, next) {
   var email    = req.body.email,
       password = req.body.password;
 
-  if(!email || !password) {
     return res.status(401).json({
       status: 'error',
       error: 'Please provide required information.'
@@ -18,14 +17,12 @@ exports.login = function (req, res, next) {
   }
 
   User.findOne({ 'login.email': email }, function (err, user) {
-    if(err) {
       return res.status(500).json({
         status: 'error',
         error: err
       });
     }
 
-    if(!user) {
       return res.status(404).json({
         status: 'error',
         error: 'User not found with that email'
@@ -33,7 +30,6 @@ exports.login = function (req, res, next) {
     }
 
     bcp.compare(password, user.login.password, function (err, result) {
-      if(err) {
         console.error(err);
         return res.status(500).json({
           status: 'error',
@@ -41,7 +37,6 @@ exports.login = function (req, res, next) {
         });
       }
 
-      if(result === true) {
         req.user = user;
 
         next();
@@ -53,4 +48,3 @@ exports.login = function (req, res, next) {
       }
     });
   });
-}

@@ -1,4 +1,5 @@
 var winston        = require('winston'),
+    chalk          = require('chalk'),
     mongooseConfig = require('./config/mongoose'),
     initializers   = require('./initializer'),
     express        = require('express'),
