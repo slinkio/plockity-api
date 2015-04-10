@@ -111,6 +111,10 @@ exports.authorize = function (req, res, next) {
         return respond.error.res(res, err);
       }
 
+      if(!authorizedSession.user) {
+        return respond.code.unauthorized(res, 'Failed to load session with user.');
+      }
+
       // Decode the json web token for use by handlers
       authorizedSession.token_unsigned = jwt.decode(authorizedSession.token, authorizedSession.session_key);
 
@@ -163,4 +167,4 @@ function findActiveSession (query, callback) {
       return callback();
     }
   });
-};
+}

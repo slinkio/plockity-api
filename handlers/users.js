@@ -114,8 +114,23 @@ exports.update = function (req, res, next) {
 };
 
 exports.del = function (req, res, next) {
-  res.status(501).json({
-    status: 'error',
-    error: 'This route has not been implemented yet.'
+  var id = req.params.id;
+
+  if ( !id ) {
+    return respond.error.res(res, 'Please specify an ID in the resource url.');
+  }
+
+  if ( req.session.token_unsigned.type === 'user' && ( !req.session.user._id || req.session.user._id.toString() !== id ) ) {
+    return respond.code.unauthorized(res);
+  }
+
+  User.findByIdAndRemove(id , function ( err ) {
+    if ( err ) {
+      return respond.error.res(res, err, true);
+    }
+
+    res.send({
+      status: 'ok'
+    });
   });
 };
